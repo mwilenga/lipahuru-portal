@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lipahuru Portal
 
-## Getting Started
+Next.js operations console for Lipahuru Payment Gateway.
 
-First, run the development server:
+## Features
+
+- **Super Admin** — onboard merchants, view all transactions
+- **Merchant** — dashboard, wallets, collections, disbursements, transactions
+
+## Setup
 
 ```bash
+cp .env.local.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Portal runs at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ensure the Laravel API (`../core`) is running:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd ../core
+php artisan serve
+```
 
-## Learn More
+Add to `core/.env`:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Default logins
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Super Admin** (from seeder):
+- Email: `admin@lipahuru.test`
+- Password: `password`
 
-## Deploy on Vercel
+**Merchant** — created when admin onboards a merchant (portal email/password shown once).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API endpoints used
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Role | Endpoint |
+|------|----------|
+| Admin | `POST /api/admin/v1/login` |
+| Admin | `GET/POST /api/admin/v1/merchants` |
+| Admin | `GET /api/admin/v1/transactions` |
+| Merchant | `POST /api/v1/merchant/login` |
+| Merchant | `GET /api/v1/portal/dashboard` |
+| Merchant | `GET /api/v1/portal/wallets` |
+| Merchant | `GET /api/v1/portal/transactions` |
