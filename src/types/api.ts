@@ -30,6 +30,14 @@ export interface Merchant {
   createdAt?: string;
 }
 
+export interface MerchantCredentials {
+  merchant: Merchant;
+  clientId: string | null;
+  clientStatus: string | null;
+  portalEmail: string | null;
+  clientSecretHint: string;
+}
+
 export interface Transaction {
   transactionId: string;
   requestId: string;

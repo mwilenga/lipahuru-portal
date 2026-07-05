@@ -14,6 +14,7 @@ import {
 import clsx from "clsx";
 import type { UserRole } from "@/types/api";
 import { clearSession, getUser } from "@/lib/auth";
+import { confirmLogout } from "@/lib/confirm";
 
 const adminNav = [
   { href: "/admin/merchants", label: "Merchants", icon: Store },
@@ -28,31 +29,30 @@ const merchantNav = [
   { href: "/merchant/transactions", label: "Transactions", icon: CreditCard },
 ];
 
-export function Sidebar({ role }: { role: UserRole }) {
+function SidebarBrand() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 text-sm font-bold text-slate-950">
+        LH
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-white">Lipahuru</div>
+        <div className="text-[10px] uppercase tracking-wider text-slate-500">
+          Payment Gateway
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SidebarBody({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const user = getUser();
   const items = role === "admin" ? adminNav : merchantNav;
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-[var(--card-border)] bg-[var(--sidebar)]">
-      <div className="border-b border-[var(--card-border)] px-5 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 text-sm font-bold text-slate-950">
-            LH
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-white">Lipahuru</div>
-            <div className="text-[10px] uppercase tracking-wider text-slate-500">
-              Payment Gateway
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 inline-flex rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-teal-300">
-          {role === "admin" ? "Super Admin" : "Merchant"}
-        </div>
-      </div>
-
-      <nav className="flex-1 space-y-1 px-3 py-4">
+    <aside className="flex min-h-0 flex-col border-r border-[var(--card-border)] bg-[var(--sidebar)]">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {items.map((item) => {
           const active =
             pathname === item.href ||
@@ -77,11 +77,14 @@ export function Sidebar({ role }: { role: UserRole }) {
         })}
       </nav>
 
-      <div className="border-t border-[var(--card-border)] px-4 py-4 text-xs text-slate-500">
+      <div className="shrink-0 border-t border-[var(--card-border)] px-4 py-4 text-xs text-slate-500">
         <div>v1.0.0</div>
         <div className="mt-1 flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-400" />
           All systems active
+        </div>
+        <div className="mt-3 inline-flex rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-teal-300">
+          {role === "admin" ? "Super Admin" : "Merchant"}
         </div>
         <div className="mt-3 truncate text-slate-400">{user?.email}</div>
       </div>
@@ -93,8 +96,8 @@ export function TopBar({ title, subtitle }: { title: string; subtitle?: string }
   const user = getUser();
 
   return (
-    <header className="sticky top-0 z-10 border-b border-[var(--card-border)] bg-[#0b1220]/90 px-6 py-4 backdrop-blur">
-      <div className="flex items-center justify-between gap-4">
+    <header className="flex items-center self-stretch border-b border-[var(--card-border)] bg-[#0b1220]/90 px-6 py-4 backdrop-blur">
+      <div className="flex w-full items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-400">{subtitle}</p> : null}
@@ -110,7 +113,10 @@ export function TopBar({ title, subtitle }: { title: string; subtitle?: string }
             </div>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
+              const confirmed = await confirmLogout();
+              if (!confirmed) return;
+
               clearSession();
               window.location.href = "/login";
             }}
@@ -137,12 +143,16 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[var(--background)]">
-      <Sidebar role={role} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar title={title} subtitle={subtitle} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+    <div className="grid min-h-screen grid-cols-[16rem_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] bg-[var(--background)]">
+      <div className="flex items-center self-stretch border-b border-r border-[var(--card-border)] bg-[var(--sidebar)] px-5 py-5">
+        <SidebarBrand />
       </div>
+
+      <TopBar title={title} subtitle={subtitle} />
+
+      <SidebarBody role={role} />
+
+      <main className="min-h-0 overflow-auto p-6">{children}</main>
     </div>
   );
 }

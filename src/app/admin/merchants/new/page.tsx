@@ -2,10 +2,44 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Copy } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
+import { copyText } from "@/lib/clipboard";
+
+function CredentialField({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    const ok = await copyText(value);
+    if (ok) {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-1 flex items-start gap-2">
+        <div className="min-w-0 flex-1 break-all rounded-lg bg-slate-950 p-3 font-mono text-sm text-teal-200">
+          {value}
+        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="rounded-lg border border-[var(--card-border)] p-2 text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+          title="Copy"
+        >
+          <Copy className="h-4 w-4" />
+        </button>
+      </div>
+      {copied ? <div className="mt-1 text-xs text-emerald-400">Copied</div> : null}
+    </div>
+  );
+}
 
 export default function NewMerchantPage() {
   const router = useRouter();
@@ -69,12 +103,7 @@ export default function NewMerchantPage() {
               Merchant created — store these credentials now
             </h3>
             {Object.entries(credentials).map(([key, value]) => (
-              <div key={key}>
-                <div className="text-xs uppercase tracking-wide text-slate-500">{key}</div>
-                <div className="mt-1 break-all rounded-lg bg-slate-950 p-3 font-mono text-sm text-teal-200">
-                  {value}
-                </div>
-              </div>
+              <CredentialField key={key} label={key} value={value} />
             ))}
             <div className="flex gap-3 pt-2">
               <Button onClick={() => router.push("/admin/merchants")}>Back to merchants</Button>
