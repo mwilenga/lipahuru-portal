@@ -38,6 +38,32 @@ export interface MerchantCredentials {
   clientSecretHint: string;
 }
 
+export interface PortalDashboard {
+  collectionsToday: string;
+  disbursementsToday: string;
+  pendingCount: number;
+  failedCount: number;
+  currency: string;
+  merchantCount?: number;
+  activeMerchantCount?: number;
+  parentWallet?: {
+    available: string;
+    reserved: string;
+    total: string;
+    currency: string;
+  };
+  providerWallets: Array<{
+    providerCode?: string;
+    name: string;
+    available: string;
+    total: string;
+    currency: string;
+  }>;
+  recentTransactions: Transaction[];
+}
+
+export type MerchantDashboard = PortalDashboard;
+
 export interface Transaction {
   transactionId: string;
   requestId: string;
@@ -45,6 +71,7 @@ export interface Transaction {
   operation: string;
   status: string;
   providerCode?: string;
+  merchantName?: string;
   amount: string;
   currency: string;
   msisdn: string;
@@ -73,26 +100,4 @@ export interface Pagination {
   perPage: number;
   total: number;
   lastPage: number;
-}
-
-export interface MerchantDashboard {
-  collectionsToday: string;
-  disbursementsToday: string;
-  pendingCount: number;
-  failedCount: number;
-  currency: string;
-  parentWallet?: {
-    available: string;
-    reserved: string;
-    total: string;
-    currency: string;
-  };
-  providerWallets: Array<{
-    providerCode?: string;
-    name: string;
-    available: string;
-    total: string;
-    currency: string;
-  }>;
-  recentTransactions: Transaction[];
 }

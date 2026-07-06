@@ -24,6 +24,7 @@ export function TransactionTable({
       <table className="min-w-full text-left text-sm">
         <thead className="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-500">
           <tr>
+            {showMerchant ? <th className="px-4 py-3">Merchant</th> : null}
             <th className="px-4 py-3">Reference</th>
             <th className="px-4 py-3">Provider Ref</th>
             <th className="px-4 py-3">Receipt</th>
@@ -41,6 +42,9 @@ export function TransactionTable({
               key={tx.transactionId}
               className="border-t border-[var(--card-border)] hover:bg-slate-900/40"
             >
+              {showMerchant ? (
+                <td className="px-4 py-3 text-slate-300">{tx.merchantName ?? "—"}</td>
+              ) : null}
               <td className="px-4 py-3 font-mono text-xs text-teal-300">
                 {tx.reference}
               </td>

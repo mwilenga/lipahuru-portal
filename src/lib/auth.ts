@@ -42,5 +42,5 @@ export function getUser(): AuthUser | null {
 }
 
 export function homeForRole(role: UserRole): string {
-  return role === "admin" ? "/admin/merchants" : "/merchant";
+  return role === "admin" ? "/admin" : "/merchant";
 }

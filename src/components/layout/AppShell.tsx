@@ -17,6 +17,7 @@ import { clearSession, getUser } from "@/lib/auth";
 import { confirmLogout } from "@/lib/confirm";
 
 const adminNav = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
   { href: "/admin/transactions", label: "Transactions", icon: CreditCard },
 ];
@@ -55,7 +56,9 @@ function SidebarBody({ role }: { role: UserRole }) {
         {items.map((item) => {
           const active =
             pathname === item.href ||
-            (item.href !== "/merchant" && pathname.startsWith(item.href));
+            (item.href !== "/merchant" &&
+              item.href !== "/admin" &&
+              pathname.startsWith(item.href));
           const Icon = item.icon;
 
           return (

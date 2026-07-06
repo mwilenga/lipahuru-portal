@@ -8,25 +8,26 @@ import { apiFetch } from "@/lib/api";
 import { getUser } from "@/lib/auth";
 import type { PortalDashboard } from "@/types/api";
 
-export default function MerchantDashboardPage() {
+export default function AdminDashboardPage() {
   const user = getUser();
   const [dashboard, setDashboard] = useState<PortalDashboard | null>(null);
 
   useEffect(() => {
-    apiFetch<PortalDashboard>("/v1/portal/dashboard").then(setDashboard);
+    apiFetch<PortalDashboard>("/admin/v1/dashboard").then(setDashboard);
   }, []);
 
   return (
-    <AuthGuard role="merchant">
+    <AuthGuard role="admin">
       <AppShell
-        role="merchant"
-        title={`Welcome, ${user?.name ?? "Merchant"}`}
-        subtitle="Overview of your wallets, collections and disbursements"
+        role="admin"
+        title={`Welcome, ${user?.name ?? "Admin"}`}
+        subtitle="Platform-wide overview across all merchants"
       >
         <DashboardView
           dashboard={dashboard}
-          balanceTitle="Parent wallet"
-          transactionsHref="/merchant/collections"
+          balanceTitle="Platform balance"
+          transactionsHref="/admin/transactions"
+          showMerchant
         />
       </AppShell>
     </AuthGuard>
