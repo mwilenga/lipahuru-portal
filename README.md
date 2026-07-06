@@ -1,6 +1,6 @@
-# Lipahuru Portal
+# LipaHuru Portal
 
-Next.js operations console for Lipahuru Payment Gateway.
+Next.js operations console for LipaHuru Payment Gateway.
 
 ## Features
 

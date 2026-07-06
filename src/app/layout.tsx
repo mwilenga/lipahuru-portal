@@ -8,8 +8,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Lipahuru Portal",
-  description: "Lipahuru payment gateway operations console",
+  title: "LipaHuru Portal",
+  description: "LipaHuru payment gateway operations console",
 };
 
 export default function RootLayout({

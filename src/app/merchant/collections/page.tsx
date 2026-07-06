@@ -1,1 +1,1 @@
-export { CollectionsPage as default } from "../transactions/page";
+export { CollectionsPage as default } from "@/components/transactions/MerchantTransactionsView";

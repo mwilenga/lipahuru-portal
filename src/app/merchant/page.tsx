@@ -113,7 +113,7 @@ export default function MerchantDashboardPage() {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-medium text-white">Recent transactions</h3>
-              <Link href="/merchant/transactions" className="text-sm text-teal-300">
+              <Link href="/merchant/collections" className="text-sm text-teal-300">
                 View all
               </Link>
             </div>

@@ -26,7 +26,6 @@ const merchantNav = [
   { href: "/merchant/wallets", label: "My Wallets", icon: Wallet },
   { href: "/merchant/collections", label: "Collections", icon: ArrowDownLeft },
   { href: "/merchant/disbursements", label: "Disbursements", icon: ArrowUpRight },
-  { href: "/merchant/transactions", label: "Transactions", icon: CreditCard },
 ];
 
 function SidebarBrand() {
@@ -36,7 +35,7 @@ function SidebarBrand() {
         LH
       </div>
       <div>
-        <div className="text-sm font-semibold text-white">Lipahuru</div>
+        <div className="text-sm font-semibold text-white">LipaHuru</div>
         <div className="text-[10px] uppercase tracking-wider text-slate-500">
           Payment Gateway
         </div>

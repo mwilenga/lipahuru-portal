@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
-import { Input, Select } from "@/components/ui/primitives";
+import { Select } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import type { Pagination, Transaction } from "@/types/api";
 
-function MerchantTransactionsView({
+export function MerchantTransactionsView({
   title,
   subtitle,
   operation,
@@ -60,17 +60,6 @@ function MerchantTransactionsView({
         <TransactionTable transactions={transactions} />
       )}
     </AppShell>
-  );
-}
-
-export default function MerchantTransactionsPage() {
-  return (
-    <AuthGuard role="merchant">
-      <MerchantTransactionsView
-        title="Transactions"
-        subtitle="All your collections and disbursements"
-      />
-    </AuthGuard>
   );
 }
 

@@ -1,1 +1,1 @@
-export { DisbursementsPage as default } from "../transactions/page";
+export { DisbursementsPage as default } from "@/components/transactions/MerchantTransactionsView";

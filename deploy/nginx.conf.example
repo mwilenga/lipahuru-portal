@@ -1,4 +1,4 @@
-# Example nginx site config for Lipahuru Portal
+# Example nginx site config for LipaHuru Portal
 # PM2 runs Next.js on 127.0.0.1:3001 (see ecosystem.config.cjs)
 
 server {
