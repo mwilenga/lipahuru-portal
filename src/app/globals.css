@@ -37,3 +37,66 @@ body {
   background: #334155;
   border-radius: 999px;
 }
+
+.login-shell {
+  --login-bg: #0c0618;
+  --login-amber: #f5a524;
+  --login-amber-soft: #fbbf24;
+  --login-violet: #8b5cf6;
+  --login-plum: #2a1448;
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 100%, rgba(245, 165, 36, 0.22), transparent 55%),
+    radial-gradient(ellipse 70% 55% at 100% 0%, rgba(139, 92, 246, 0.28), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(190, 24, 93, 0.08), transparent 60%),
+    linear-gradient(155deg, #12081f 0%, #0c0618 45%, #080612 100%);
+}
+
+.login-grid-overlay {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+}
+
+.login-card {
+  background: linear-gradient(
+    165deg,
+    rgba(30, 18, 52, 0.92) 0%,
+    rgba(12, 8, 24, 0.88) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(245, 165, 36, 0.06),
+    0 24px 80px rgba(0, 0, 0, 0.55),
+    0 0 120px rgba(139, 92, 246, 0.12);
+  backdrop-filter: blur(20px);
+}
+
+.login-input {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 6, 18, 0.75);
+  color: #f1f5f9;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: rgba(245, 165, 36, 0.45);
+  box-shadow: 0 0 0 3px rgba(245, 165, 36, 0.15);
+}
+
+.login-btn-primary {
+  background: linear-gradient(135deg, #f5a524 0%, #ea580c 100%);
+  color: #1a0a00;
+  font-weight: 600;
+  box-shadow: 0 8px 32px rgba(245, 165, 36, 0.28);
+}
+
+.login-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+  box-shadow: 0 10px 36px rgba(245, 165, 36, 0.38);
+}
+
+.login-btn-primary:disabled {
+  opacity: 0.6;
+}
