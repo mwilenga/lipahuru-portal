@@ -69,7 +69,7 @@ export function TransactionTable({
                 <Badge className={statusColor(tx.status)}>{tx.status}</Badge>
               </td>
               <td className="px-4 py-3">
-                <DateTimeCell value={tx.finalizedAt ?? tx.createdAt} />
+                <DateTimeCell value={tx.createdAt} />
               </td>
             </tr>
           ))}

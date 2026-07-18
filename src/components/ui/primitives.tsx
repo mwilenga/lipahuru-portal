@@ -65,10 +65,17 @@ export function Button({
   );
 }
 
-export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Input({
+  className,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className="w-full rounded-xl border border-[var(--card-border)] bg-slate-950 px-4 py-2.5 text-sm text-slate-100 outline-none ring-teal-500/30 focus:ring-2"
+      className={clsx(
+        "w-full rounded-xl border border-[var(--card-border)] bg-slate-950 px-4 py-2.5 text-sm text-slate-100 outline-none ring-teal-500/30 focus:ring-2",
+        props.type === "date" && "date-input",
+        className,
+      )}
       {...props}
     />
   );

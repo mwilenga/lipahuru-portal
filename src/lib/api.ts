@@ -21,6 +21,10 @@ export async function apiFetch<T>(
   const token = getToken();
   const headers = new Headers(options.headers);
 
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "application/json");
+  }
+
   if (!headers.has("Content-Type") && options.body) {
     headers.set("Content-Type", "application/json");
   }
@@ -34,10 +38,36 @@ export async function apiFetch<T>(
     headers,
   });
 
-  const payload = (await response.json()) as ApiEnvelope<T>;
+  const raw = await response.text();
+  let payload: ApiEnvelope<T> | null = null;
+
+  if (raw) {
+    try {
+      payload = JSON.parse(raw) as ApiEnvelope<T>;
+    } catch {
+      const preview = raw.trim().slice(0, 80).replace(/\s+/g, " ");
+      throw new ApiError(
+        response.ok
+          ? `Invalid API response (expected JSON). Got: ${preview}`
+          : `Request failed (${response.status}). Server returned HTML/non-JSON instead of an API error.`,
+        response.status,
+      );
+    }
+  }
+
+  if (!payload) {
+    throw new ApiError(
+      response.ok ? "Empty API response" : `Request failed (${response.status})`,
+      response.status,
+    );
+  }
 
   if (!response.ok || payload.status === "FAILED") {
-    throw new ApiError(payload.message ?? "Request failed", response.status, payload.code);
+    throw new ApiError(
+      payload.message ?? "Request failed",
+      response.status,
+      payload.code,
+    );
   }
 
   return payload.data;

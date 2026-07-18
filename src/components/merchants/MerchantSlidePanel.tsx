@@ -51,24 +51,37 @@ export function MerchantSlidePanel({
   const load = useCallback(async (id: number) => {
     setLoading(true);
     setError("");
+    setMerchant(null);
+    setCredentials(null);
+    setCommissions(defaultCommissions);
+
     try {
-      const [merchantData, credentialsData, commissionsData] = await Promise.all([
-        apiFetch<Merchant>(`/admin/v1/merchants/${id}`),
-        apiFetch<MerchantCredentials>(`/admin/v1/merchants/${id}/credentials`),
-        apiFetch<{ commissions: MerchantCommission[] }>(
-          `/admin/v1/merchants/${id}/commissions`,
-        ),
-      ]);
+      const [merchantResult, credentialsResult, commissionsResult] =
+        await Promise.allSettled([
+          apiFetch<Merchant>(`/admin/v1/merchants/${id}`),
+          apiFetch<MerchantCredentials>(`/admin/v1/merchants/${id}/credentials`),
+          apiFetch<{ commissions: MerchantCommission[] }>(
+            `/admin/v1/merchants/${id}/commissions`,
+          ),
+        ]);
+
+      if (merchantResult.status === "rejected") {
+        throw merchantResult.reason instanceof Error
+          ? merchantResult.reason
+          : new Error("Failed to load merchant");
+      }
+
+      if (credentialsResult.status === "rejected") {
+        throw credentialsResult.reason instanceof Error
+          ? credentialsResult.reason
+          : new Error("Failed to load credentials");
+      }
+
+      const merchantData = merchantResult.value;
+      const credentialsData = credentialsResult.value;
 
       setMerchant(merchantData);
       setCredentials(credentialsData);
-      setCommissions(
-        defaultCommissions.map(
-          (def) =>
-            commissionsData.commissions.find((row) => row.operation === def.operation) ??
-            def,
-        ),
-      );
       setForm({
         name: merchantData.name ?? "",
         email: merchantData.email ?? "",
@@ -76,6 +89,26 @@ export function MerchantSlidePanel({
         defaultCallbackUrl: merchantData.defaultCallbackUrl ?? "",
         environment: merchantData.environment ?? "uat",
       });
+
+      if (commissionsResult.status === "fulfilled") {
+        setCommissions(
+          defaultCommissions.map(
+            (def) =>
+              commissionsResult.value.commissions.find(
+                (row) => row.operation === def.operation,
+              ) ?? def,
+          ),
+        );
+      } else {
+        setCommissions(defaultCommissions);
+        const commissionError =
+          commissionsResult.reason instanceof Error
+            ? commissionsResult.reason.message
+            : "Commission settings unavailable";
+        setError(
+          `Overview and credentials loaded. Commission settings could not be loaded: ${commissionError}`,
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load merchant");
     } finally {

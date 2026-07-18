@@ -13,6 +13,9 @@ export function formatMoney(amount: string | number, currency = "TZS"): string {
   })}`;
 }
 
+/** Display & filter calendar days in East Africa Time. */
+export const APP_TIMEZONE = "Africa/Dar_es_Salaam";
+
 export function formatRelativeTime(iso?: string): string {
   if (!iso) return "—";
 
@@ -32,22 +35,28 @@ export function formatRelativeTime(iso?: string): string {
   return `${days}d ago`;
 }
 
-/** Format as YYYY-MM-DD HH:mm:ss (local time). */
+/** Format as YYYY-MM-DD HH:mm:ss in APP_TIMEZONE. */
 export function formatDateTime(iso?: string): string {
   if (!iso) return "—";
 
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
 
-  const pad = (n: number) => String(n).padStart(2, "0");
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
 
-  return [
-    date.getFullYear(),
-    pad(date.getMonth() + 1),
-    pad(date.getDate()),
-  ].join("-") +
-    " " +
-    [pad(date.getHours()), pad(date.getMinutes()), pad(date.getSeconds())].join(":");
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "00";
+
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
 }
 
 
