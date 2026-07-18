@@ -17,6 +17,8 @@ export function formatRelativeTime(iso?: string): string {
   if (!iso) return "—";
 
   const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+
   const diffMs = Date.now() - date.getTime();
   const minutes = Math.floor(diffMs / 60000);
 
@@ -29,6 +31,25 @@ export function formatRelativeTime(iso?: string): string {
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }
+
+/** Format as YYYY-MM-DD HH:mm:ss (local time). */
+export function formatDateTime(iso?: string): string {
+  if (!iso) return "—";
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") +
+    " " +
+    [pad(date.getHours()), pad(date.getMinutes()), pad(date.getSeconds())].join(":");
+}
+
 
 export function providerColor(code?: string): string {
   switch (code?.toUpperCase()) {

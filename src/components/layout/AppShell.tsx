@@ -16,6 +16,8 @@ import type { UserRole } from "@/types/api";
 import { clearSession, getUser } from "@/lib/auth";
 import { confirmLogout } from "@/lib/confirm";
 
+const HEADER_ROW = "flex h-[4.5rem] shrink-0 items-center overflow-hidden px-5 md:px-6";
+
 const adminNav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
@@ -51,8 +53,12 @@ function SidebarBody({ role }: { role: UserRole }) {
   const items = role === "admin" ? adminNav : merchantNav;
 
   return (
-    <aside className="flex min-h-0 flex-col border-r border-[var(--card-border)] bg-[var(--sidebar)]">
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+    <aside className="flex h-full min-h-0 w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--card-border)] bg-[var(--sidebar)]">
+      <div className={clsx(HEADER_ROW, "border-b border-[var(--card-border)]")}>
+        <SidebarBrand />
+      </div>
+
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {items.map((item) => {
           const active =
             pathname === item.href ||
@@ -98,13 +104,15 @@ export function TopBar({ title, subtitle }: { title: string; subtitle?: string }
   const user = getUser();
 
   return (
-    <header className="flex items-center self-stretch border-b border-[var(--card-border)] bg-[#0b1220]/90 px-6 py-4 backdrop-blur">
-      <div className="flex w-full items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">{title}</h1>
-          {subtitle ? <p className="mt-1 text-sm text-slate-400">{subtitle}</p> : null}
+    <header className="shrink-0 border-b border-[var(--card-border)] bg-[#0b1220]/95 backdrop-blur">
+      <div className={clsx(HEADER_ROW, "justify-between gap-4")}>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold text-white md:text-2xl">{title}</h1>
+          {subtitle ? (
+            <p className="mt-0.5 truncate text-sm text-slate-400">{subtitle}</p>
+          ) : null}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <div className="hidden items-center gap-3 rounded-xl border border-[var(--card-border)] bg-slate-950 px-3 py-2 md:flex">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-500/20 text-sm font-semibold text-teal-200">
               {user?.name?.charAt(0) ?? "U"}
@@ -145,16 +153,13 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid min-h-screen grid-cols-[16rem_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] bg-[var(--background)]">
-      <div className="flex items-center self-stretch border-b border-r border-[var(--card-border)] bg-[var(--sidebar)] px-5 py-5">
-        <SidebarBrand />
-      </div>
-
-      <TopBar title={title} subtitle={subtitle} />
-
+    <div className="flex h-dvh max-h-dvh overflow-hidden bg-[var(--background)]">
       <SidebarBody role={role} />
 
-      <main className="min-h-0 overflow-auto p-6">{children}</main>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <TopBar title={title} subtitle={subtitle} />
+        <main className="min-h-0 flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
     </div>
   );
 }

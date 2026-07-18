@@ -101,3 +101,16 @@ export interface Pagination {
   total: number;
   lastPage: number;
 }
+
+export interface TransactionSummary {
+  totalAmount: string;
+  currency: string;
+  count: number;
+}
+
+export interface MerchantCommission {
+  operation: "C2B_USSD_PUSH" | "B2C_DISBURSEMENT";
+  commissionType: "FIXED" | "PERCENT";
+  value: string;
+}
+

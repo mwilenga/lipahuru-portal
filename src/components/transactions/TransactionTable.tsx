@@ -1,7 +1,8 @@
 "use client";
 
+import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { Badge } from "@/components/ui/primitives";
-import { formatMoney, formatRelativeTime, providerColor, statusColor } from "@/lib/format";
+import { formatMoney, providerColor, statusColor } from "@/lib/format";
 import type { Transaction } from "@/types/api";
 
 export function TransactionTable({
@@ -67,8 +68,8 @@ export function TransactionTable({
               <td className="px-4 py-3">
                 <Badge className={statusColor(tx.status)}>{tx.status}</Badge>
               </td>
-              <td className="px-4 py-3 text-slate-500">
-                {formatRelativeTime(tx.finalizedAt ?? tx.createdAt)}
+              <td className="px-4 py-3">
+                <DateTimeCell value={tx.finalizedAt ?? tx.createdAt} />
               </td>
             </tr>
           ))}

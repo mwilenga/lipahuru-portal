@@ -1,23 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { MerchantActionMenu } from "@/components/merchants/MerchantActionMenu";
+import { MerchantOnboardPanel } from "@/components/merchants/MerchantOnboardPanel";
+import { MerchantSlidePanel } from "@/components/merchants/MerchantSlidePanel";
+import { PaginationBar } from "@/components/ui/PaginationBar";
+import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { Badge, Button } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
-import { formatRelativeTime, statusColor } from "@/lib/format";
+import { statusColor } from "@/lib/format";
 import type { Merchant, Pagination } from "@/types/api";
 
-export default function AdminMerchantsPage() {
+type PanelTab = "overview" | "credentials" | "commission";
+
+const PER_PAGE = 10;
+
+function AdminMerchantsContent() {
+  const searchParams = useSearchParams();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [panelMerchantId, setPanelMerchantId] = useState<number | null>(null);
+  const [panelTab, setPanelTab] = useState<PanelTab>("overview");
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [onboardOpen, setOnboardOpen] = useState(false);
 
-  const loadMerchants = useCallback(() => {
+  const loadMerchants = useCallback((pageNum: number) => {
     setLoading(true);
-    return apiFetch<{ merchants: Merchant[]; pagination: Pagination }>("/admin/v1/merchants")
+    const params = new URLSearchParams({
+      page: String(pageNum),
+      perPage: String(PER_PAGE),
+    });
+    return apiFetch<{ merchants: Merchant[]; pagination: Pagination }>(
+      `/admin/v1/merchants?${params.toString()}`,
+    )
       .then((data) => {
         setMerchants(data.merchants);
         setPagination(data.pagination);
@@ -26,8 +46,31 @@ export default function AdminMerchantsPage() {
   }, []);
 
   useEffect(() => {
-    loadMerchants();
-  }, [loadMerchants]);
+    void loadMerchants(page);
+  }, [loadMerchants, page]);
+
+  useEffect(() => {
+    const merchantId = searchParams.get("merchantId");
+    const tab = searchParams.get("tab") as PanelTab | null;
+    if (merchantId) {
+      setPanelMerchantId(Number(merchantId));
+      setPanelTab(
+        tab && ["overview", "credentials", "commission"].includes(tab)
+          ? tab
+          : "overview",
+      );
+      setPanelOpen(true);
+    }
+    if (searchParams.get("onboard") === "1") {
+      setOnboardOpen(true);
+    }
+  }, [searchParams]);
+
+  function openPanel(merchantId: number, tab: PanelTab = "overview") {
+    setPanelMerchantId(merchantId);
+    setPanelTab(tab);
+    setPanelOpen(true);
+  }
 
   async function approveMerchant(merchant: Merchant) {
     await apiFetch(`/admin/v1/merchants/${merchant.id}/approve`, { method: "POST" });
@@ -39,7 +82,11 @@ export default function AdminMerchantsPage() {
   }
 
   async function disableMerchant(merchant: Merchant) {
-    if (!window.confirm(`Disable ${merchant.name}? They will not be able to process payments.`)) {
+    if (
+      !window.confirm(
+        `Disable ${merchant.name}? They will not be able to process payments.`,
+      )
+    ) {
       return;
     }
 
@@ -65,9 +112,9 @@ export default function AdminMerchantsPage() {
           <div className="text-sm text-slate-400">
             {pagination ? `${pagination.total} merchants` : "Loading..."}
           </div>
-          <Link href="/admin/merchants/new">
-            <Button>Onboard merchant</Button>
-          </Link>
+          <Button type="button" onClick={() => setOnboardOpen(true)}>
+            Onboard merchant
+          </Button>
         </div>
 
         {loading ? (
@@ -77,58 +124,105 @@ export default function AdminMerchantsPage() {
             No merchants yet. Onboard your first merchant to get started.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-[var(--card-border)]">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Merchant</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Environment</th>
-                  <th className="px-4 py-3">Currency</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Created</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {merchants.map((merchant) => (
-                  <tr
-                    key={merchant.id}
-                    className="border-t border-[var(--card-border)] hover:bg-slate-900/40"
-                  >
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/merchants/${merchant.id}`}
-                        className="font-medium text-white hover:text-teal-300"
-                      >
-                        {merchant.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-slate-300">{merchant.email}</td>
-                    <td className="px-4 py-3 uppercase text-slate-400">
-                      {merchant.environment}
-                    </td>
-                    <td className="px-4 py-3 text-slate-300">{merchant.defaultCurrency}</td>
-                    <td className="px-4 py-3">
-                      <Badge className={statusColor(merchant.status)}>{merchant.status}</Badge>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {formatRelativeTime(merchant.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <MerchantActionMenu
-                        merchant={merchant}
-                        onApprove={() => approveMerchant(merchant)}
-                        onDisable={() => disableMerchant(merchant)}
-                      />
-                    </td>
+          <div>
+            <div className="overflow-x-auto rounded-2xl border border-[var(--card-border)]">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">Merchant</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Environment</th>
+                    <th className="px-4 py-3">Currency</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {merchants.map((merchant) => (
+                    <tr
+                      key={merchant.id}
+                      className="border-t border-[var(--card-border)] hover:bg-slate-900/40"
+                    >
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => openPanel(merchant.id, "overview")}
+                          className="font-medium text-white hover:text-teal-300"
+                        >
+                          {merchant.name}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-slate-300">{merchant.email}</td>
+                      <td className="px-4 py-3 uppercase text-slate-400">
+                        {merchant.environment}
+                      </td>
+                      <td className="px-4 py-3 text-slate-300">
+                        {merchant.defaultCurrency}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={statusColor(merchant.status)}>
+                          {merchant.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <DateTimeCell value={merchant.createdAt} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <MerchantActionMenu
+                          merchant={merchant}
+                          onEdit={() => openPanel(merchant.id, "overview")}
+                          onCredentials={() => openPanel(merchant.id, "credentials")}
+                          onApprove={() => approveMerchant(merchant)}
+                          onDisable={() => disableMerchant(merchant)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <PaginationBar pagination={pagination} onPageChange={setPage} />
           </div>
         )}
+
+        <MerchantSlidePanel
+          open={panelOpen}
+          merchantId={panelMerchantId}
+          initialTab={panelTab}
+          onClose={() => setPanelOpen(false)}
+          onSaved={() => void loadMerchants(page)}
+        />
+
+        <MerchantOnboardPanel
+          open={onboardOpen}
+          onClose={() => setOnboardOpen(false)}
+          onCreated={() => {
+            setPage(1);
+            void loadMerchants(1);
+          }}
+        />
       </AppShell>
     </AuthGuard>
+  );
+}
+
+export default function AdminMerchantsPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthGuard role="admin">
+          <AppShell
+            role="admin"
+            title="Merchants"
+            subtitle="Onboard and manage merchant accounts"
+          >
+            <div className="text-slate-400">Loading merchants...</div>
+          </AppShell>
+        </AuthGuard>
+      }
+    >
+      <AdminMerchantsContent />
+    </Suspense>
   );
 }

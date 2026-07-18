@@ -77,7 +77,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className="rounded-xl border border-[var(--card-border)] bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none"
+      className="w-full rounded-xl border border-[var(--card-border)] bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none"
       {...props}
     />
   );
