@@ -10,7 +10,7 @@ import { PaginationBar } from "@/components/ui/PaginationBar";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
+import { defaultWeekDateRange, formatMoney } from "@/lib/format";
 import {
   PROVIDER_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
@@ -18,6 +18,7 @@ import {
 import type { Pagination, Transaction, TransactionSummary } from "@/types/api";
 
 const PER_PAGE = 10;
+const defaultDates = defaultWeekDateRange();
 
 export function MerchantTransactionsView({
   title,
@@ -38,8 +39,8 @@ export function MerchantTransactionsView({
   const [msisdn, setMsisdn] = useState("");
   const [providerCode, setProviderCode] = useState("");
   const [status, setStatus] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(defaultDates.from);
+  const [to, setTo] = useState(defaultDates.to);
 
   useEffect(() => {
     setPage(1);

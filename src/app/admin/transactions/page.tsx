@@ -10,7 +10,7 @@ import { PaginationBar } from "@/components/ui/PaginationBar";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
+import { defaultWeekDateRange, formatMoney } from "@/lib/format";
 import {
   OPERATION_FILTER_OPTIONS,
   PROVIDER_FILTER_OPTIONS,
@@ -24,6 +24,7 @@ import type {
 } from "@/types/api";
 
 const PER_PAGE = 10;
+const defaultDates = defaultWeekDateRange();
 
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -39,8 +40,8 @@ export default function AdminTransactionsPage() {
   const [providerCode, setProviderCode] = useState("");
   const [status, setStatus] = useState("");
   const [operation, setOperation] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(defaultDates.from);
+  const [to, setTo] = useState(defaultDates.to);
 
   const merchantOptions = useMemo(
     () => [

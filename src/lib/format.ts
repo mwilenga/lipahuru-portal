@@ -59,6 +59,32 @@ export function formatDateTime(iso?: string): string {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
 }
 
+/** YYYY-MM-DD for a Date in APP_TIMEZONE. */
+export function formatDateOnly(date: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "00";
+
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+/** Default listing range: today and 7 days back (inclusive week window). */
+export function defaultWeekDateRange(): { from: string; to: string } {
+  const to = new Date();
+  const from = new Date(to.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  return {
+    from: formatDateOnly(from),
+    to: formatDateOnly(to),
+  };
+}
+
 
 export function providerColor(code?: string): string {
   switch (code?.toUpperCase()) {
