@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
@@ -16,7 +16,12 @@ import {
   PROVIDER_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
 } from "@/lib/select-options";
-import type { Pagination, Transaction, TransactionSummary } from "@/types/api";
+import type {
+  Merchant,
+  Pagination,
+  Transaction,
+  TransactionSummary,
+} from "@/types/api";
 
 const PER_PAGE = 10;
 
@@ -26,6 +31,8 @@ export default function AdminTransactionsPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [merchantId, setMerchantId] = useState("");
   const [reference, setReference] = useState("");
   const [receipt, setReceipt] = useState("");
   const [msisdn, setMsisdn] = useState("");
@@ -35,13 +42,42 @@ export default function AdminTransactionsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
+  const merchantOptions = useMemo(
+    () => [
+      { value: "", label: "All merchants" },
+      ...merchants.map((merchant) => ({
+        value: String(merchant.id),
+        label: merchant.name,
+        description: merchant.email,
+      })),
+    ],
+    [merchants],
+  );
+
+  useEffect(() => {
+    apiFetch<{ merchants: Merchant[] }>("/admin/v1/merchants?perPage=100").then(
+      (data) => setMerchants(data.merchants),
+    );
+  }, []);
+
   useEffect(() => {
     setPage(1);
-  }, [reference, receipt, msisdn, providerCode, status, operation, from, to]);
+  }, [
+    merchantId,
+    reference,
+    receipt,
+    msisdn,
+    providerCode,
+    status,
+    operation,
+    from,
+    to,
+  ]);
 
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
+    if (merchantId) params.set("merchantId", merchantId);
     if (reference) params.set("reference", reference);
     if (receipt) params.set("providerReceiptNo", receipt);
     if (msisdn) params.set("msisdn", msisdn);
@@ -64,7 +100,18 @@ export default function AdminTransactionsPage() {
         setPagination(data.pagination);
       })
       .finally(() => setLoading(false));
-  }, [reference, receipt, msisdn, providerCode, status, operation, from, to, page]);
+  }, [
+    merchantId,
+    reference,
+    receipt,
+    msisdn,
+    providerCode,
+    status,
+    operation,
+    from,
+    to,
+    page,
+  ]);
 
   return (
     <AuthGuard role="admin">
@@ -76,6 +123,14 @@ export default function AdminTransactionsPage() {
         <div className="space-y-4">
           <FilterCard>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <FilterField label="Merchant">
+                <StaticSearchableSelect
+                  value={merchantId}
+                  onChange={setMerchantId}
+                  options={merchantOptions}
+                  placeholder="All merchants"
+                />
+              </FilterField>
               <FilterField label="Reference">
                 <Input
                   placeholder="ref / requestId"
