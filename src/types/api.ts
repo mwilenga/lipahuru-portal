@@ -73,6 +73,8 @@ export interface Transaction {
   providerCode?: string;
   merchantName?: string;
   amount: string;
+  fee?: string;
+  net?: string;
   currency: string;
   msisdn: string;
   providerTransactionId?: string;

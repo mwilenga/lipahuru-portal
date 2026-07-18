@@ -33,6 +33,8 @@ export function TransactionTable({
             <th className="px-4 py-3">Operation</th>
             <th className="px-4 py-3">MSISDN</th>
             <th className="px-4 py-3">Amount</th>
+            <th className="px-4 py-3">Fee</th>
+            <th className="px-4 py-3">Net</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Time</th>
           </tr>
@@ -64,6 +66,12 @@ export function TransactionTable({
               <td className="px-4 py-3 text-slate-300">{tx.msisdn}</td>
               <td className="px-4 py-3 font-medium text-white">
                 {formatMoney(tx.amount, tx.currency)}
+              </td>
+              <td className="px-4 py-3 text-amber-200/90">
+                {formatMoney(tx.fee ?? "0", tx.currency)}
+              </td>
+              <td className="px-4 py-3 font-medium text-emerald-300">
+                {formatMoney(tx.net ?? tx.amount, tx.currency)}
               </td>
               <td className="px-4 py-3">
                 <Badge className={statusColor(tx.status)}>{tx.status}</Badge>

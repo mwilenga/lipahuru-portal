@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { DateInput } from "@/components/ui/DateInput";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Card, Input } from "@/components/ui/primitives";
@@ -107,14 +108,10 @@ export function MerchantTransactionsView({
             </FilterField>
             <div className="col-span-full grid gap-3 md:grid-cols-2">
               <FilterField label="From">
-                <Input
-                  type="date"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                />
+                <DateInput value={from} onChange={setFrom} />
               </FilterField>
               <FilterField label="To">
-                <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                <DateInput value={to} onChange={setTo} />
               </FilterField>
             </div>
             <FilterField label="Status">

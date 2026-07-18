@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { DateInput } from "@/components/ui/DateInput";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Card, Input } from "@/components/ui/primitives";
@@ -104,32 +105,32 @@ export default function AdminTransactionsPage() {
                   placeholder="All providers"
                 />
               </FilterField>
-              <FilterField label="Status">
-                <StaticSearchableSelect
-                  value={status}
-                  onChange={setStatus}
-                  options={STATUS_FILTER_OPTIONS}
-                  placeholder="All statuses"
-                />
-              </FilterField>
-              <FilterField label="Operation">
-                <StaticSearchableSelect
-                  value={operation}
-                  onChange={setOperation}
-                  options={OPERATION_FILTER_OPTIONS}
-                  placeholder="All operations"
-                />
-              </FilterField>
-              <FilterField label="From">
-                <Input
-                  type="date"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                />
-              </FilterField>
-              <FilterField label="To">
-                <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-              </FilterField>
+              <div className="col-span-full grid gap-3 md:grid-cols-2">
+                <FilterField label="Status">
+                  <StaticSearchableSelect
+                    value={status}
+                    onChange={setStatus}
+                    options={STATUS_FILTER_OPTIONS}
+                    placeholder="All statuses"
+                  />
+                </FilterField>
+                <FilterField label="Operation">
+                  <StaticSearchableSelect
+                    value={operation}
+                    onChange={setOperation}
+                    options={OPERATION_FILTER_OPTIONS}
+                    placeholder="All operations"
+                  />
+                </FilterField>
+              </div>
+              <div className="col-span-full grid gap-3 md:grid-cols-2">
+                <FilterField label="From">
+                  <DateInput value={from} onChange={setFrom} />
+                </FilterField>
+                <FilterField label="To">
+                  <DateInput value={to} onChange={setTo} />
+                </FilterField>
+              </div>
             </div>
           </FilterCard>
 
