@@ -52,7 +52,7 @@ export function SlidePanel({
         aria-labelledby="slide-panel-title"
         aria-modal="true"
         className={clsx(
-          "relative flex h-full w-full max-w-md flex-col border-l border-[var(--card-border)] bg-[var(--card)] shadow-2xl",
+          "relative flex h-full w-full flex-col border-l border-[var(--card-border)] bg-[var(--card)] shadow-2xl sm:max-w-md",
           panelClassName,
         )}
         role="dialog"

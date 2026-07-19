@@ -108,11 +108,11 @@ function AdminMerchantsContent() {
         title="Merchants"
         subtitle="Onboard and manage merchant accounts"
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-slate-400">
             {pagination ? `${pagination.total} merchants` : "Loading..."}
           </div>
-          <Button type="button" onClick={() => setOnboardOpen(true)}>
+          <Button type="button" onClick={() => setOnboardOpen(true)} className="w-full sm:w-auto">
             Onboard merchant
           </Button>
         </div>
@@ -126,15 +126,15 @@ function AdminMerchantsContent() {
         ) : (
           <div>
             <div className="overflow-x-auto rounded-2xl border border-[var(--card-border)]">
-              <table className="min-w-full text-left text-sm">
+              <table className="min-w-[720px] w-full text-left text-sm sm:min-w-full">
                 <thead className="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-4 py-3">Merchant</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Environment</th>
-                    <th className="px-4 py-3">Currency</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3 text-left">Merchant</th>
+                    <th className="px-4 py-3 text-left">Email</th>
+                    <th className="px-4 py-3 text-left">Environment</th>
+                    <th className="px-4 py-3 text-left">Currency</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-left">Created</th>
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -144,16 +144,18 @@ function AdminMerchantsContent() {
                       key={merchant.id}
                       className="border-t border-[var(--card-border)] hover:bg-slate-900/40"
                     >
-                      <td className="px-4 py-3">
+                      <td className="max-w-[14rem] px-4 py-3 text-left align-middle sm:max-w-[18rem]">
                         <button
                           type="button"
                           onClick={() => openPanel(merchant.id, "overview")}
-                          className="font-medium text-white hover:text-teal-300"
+                          className="block w-full whitespace-normal break-words text-left font-medium leading-snug text-white hover:text-teal-300"
                         >
                           {merchant.name}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-slate-300">{merchant.email}</td>
+                      <td className="px-4 py-3 text-left align-middle text-slate-300">
+                        <span className="break-all">{merchant.email}</span>
+                      </td>
                       <td className="px-4 py-3 uppercase text-slate-400">
                         {merchant.environment}
                       </td>

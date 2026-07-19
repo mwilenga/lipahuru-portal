@@ -112,7 +112,7 @@ export function MerchantOnboardPanel({
       open={open}
       title={credentials ? "Merchant created" : "Onboard merchant"}
       onClose={onClose}
-      panelClassName="max-w-none md:w-1/2"
+      panelClassName="w-full max-w-none md:w-1/2"
     >
       {credentials ? (
         <div className="space-y-4">

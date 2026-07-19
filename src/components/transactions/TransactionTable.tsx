@@ -22,7 +22,7 @@ export function TransactionTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-[var(--card-border)]">
-      <table className="min-w-full text-left text-sm">
+      <table className="min-w-[720px] w-full text-left text-sm sm:min-w-full">
         <thead className="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             {showMerchant ? <th className="px-4 py-3">Merchant</th> : null}

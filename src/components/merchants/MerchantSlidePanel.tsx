@@ -183,7 +183,7 @@ export function MerchantSlidePanel({
       open={open}
       title={title}
       onClose={onClose}
-      panelClassName="max-w-none md:w-1/2"
+      panelClassName="w-full max-w-none md:w-1/2"
     >
       {loading ? (
         <p className="text-sm text-slate-400">Loading merchant...</p>

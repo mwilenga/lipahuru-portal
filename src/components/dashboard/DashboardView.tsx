@@ -28,12 +28,14 @@ function StatCard({
 }) {
   return (
     <Card className={className}>
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="text-xs uppercase tracking-wide text-slate-500">{title}</div>
-          <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+          <div className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">
+            {value}
+          </div>
         </div>
-        <div className={`rounded-xl p-3 ${accent}`}>{icon}</div>
+        <div className={`shrink-0 rounded-xl p-2.5 sm:p-3 ${accent}`}>{icon}</div>
       </div>
     </Card>
   );
@@ -52,9 +54,9 @@ export function DashboardView({
 }) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 gap-3 sm:gap-4">
         <StatCard
-          className="col-span-6"
+          className="col-span-12 sm:col-span-6"
           title={balanceTitle}
           value={
             dashboard?.parentWallet
@@ -65,7 +67,7 @@ export function DashboardView({
           accent="bg-teal-500/10"
         />
         <StatCard
-          className="col-span-6"
+          className="col-span-12 sm:col-span-6"
           title={showMerchant ? "Merchants" : "Pending"}
           value={
             showMerchant
@@ -82,14 +84,14 @@ export function DashboardView({
           accent={showMerchant ? "bg-violet-500/10" : "bg-amber-500/10"}
         />
         <StatCard
-          className="col-span-6"
+          className="col-span-12 sm:col-span-6"
           title="Collections today"
           value={fmt(dashboard?.collectionsToday ?? "0", dashboard?.currency ?? "TZS")}
           icon={<ArrowDownLeft className="h-5 w-5 text-emerald-300" />}
           accent="bg-emerald-500/10"
         />
         <StatCard
-          className="col-span-6"
+          className="col-span-12 sm:col-span-6"
           title="Disbursements today"
           value={fmt(dashboard?.disbursementsToday ?? "0", dashboard?.currency ?? "TZS")}
           icon={<ArrowUpRight className="h-5 w-5 text-blue-300" />}
@@ -103,7 +105,7 @@ export function DashboardView({
           {(dashboard?.providerWallets ?? []).map((wallet) => (
             <div
               key={`${wallet.providerCode ?? wallet.name}`}
-              className="col-span-6 rounded-xl border border-[var(--card-border)] bg-slate-950 p-4"
+              className="col-span-12 rounded-xl border border-[var(--card-border)] bg-slate-950 p-4 sm:col-span-6"
             >
               <Badge className={providerColor(wallet.providerCode)}>
                 {wallet.providerCode ?? wallet.name}
