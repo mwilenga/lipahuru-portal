@@ -10,6 +10,7 @@ import { PaginationBar } from "@/components/ui/PaginationBar";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
+import { fetchAllFilteredTransactions } from "@/lib/fetch-all-transactions";
 import { defaultWeekDateRange, formatMoney } from "@/lib/format";
 import {
   PROVIDER_FILTER_OPTIONS,
@@ -142,7 +143,29 @@ export function MerchantTransactionsView({
           <div className="text-slate-400">Loading transactions...</div>
         ) : (
           <div>
-            <TransactionTable transactions={transactions} />
+            <TransactionTable
+              transactions={transactions}
+              title="Transactions"
+              exportFilename={
+                operation === "B2C_DISBURSEMENT"
+                  ? "disbursements"
+                  : operation === "C2B_USSD_PUSH"
+                    ? "collections"
+                    : "transactions"
+              }
+              loadExportRows={async () => {
+                const params = new URLSearchParams();
+                if (operation) params.set("operation", operation);
+                if (reference) params.set("reference", reference);
+                if (receipt) params.set("providerReceiptNo", receipt);
+                if (msisdn) params.set("msisdn", msisdn);
+                if (status) params.set("status", status);
+                if (providerCode) params.set("providerCode", providerCode);
+                if (from) params.set("from", from);
+                if (to) params.set("to", to);
+                return fetchAllFilteredTransactions("/v1/portal/transactions", params);
+              }}
+            />
             <PaginationBar pagination={pagination} onPageChange={setPage} />
           </div>
         )}

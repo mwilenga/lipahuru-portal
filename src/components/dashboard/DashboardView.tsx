@@ -131,6 +131,7 @@ export function DashboardView({
         <TransactionTable
           transactions={dashboard?.recentTransactions ?? []}
           showMerchant={showMerchant}
+          showHeader={false}
         />
       </Card>
     </div>

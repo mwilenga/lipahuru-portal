@@ -10,6 +10,7 @@ import { PaginationBar } from "@/components/ui/PaginationBar";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
+import { fetchAllFilteredTransactions } from "@/lib/fetch-all-transactions";
 import { defaultWeekDateRange, formatMoney } from "@/lib/format";
 import {
   OPERATION_FILTER_OPTIONS,
@@ -208,7 +209,25 @@ export default function AdminTransactionsPage() {
             <div className="text-slate-400">Loading transactions...</div>
           ) : (
             <div>
-              <TransactionTable transactions={transactions} showMerchant />
+              <TransactionTable
+                transactions={transactions}
+                showMerchant
+                title="Transactions"
+                exportFilename="admin-transactions"
+                loadExportRows={async () => {
+                  const params = new URLSearchParams();
+                  if (merchantId) params.set("merchantId", merchantId);
+                  if (reference) params.set("reference", reference);
+                  if (receipt) params.set("providerReceiptNo", receipt);
+                  if (msisdn) params.set("msisdn", msisdn);
+                  if (providerCode) params.set("providerCode", providerCode);
+                  if (status) params.set("status", status);
+                  if (operation) params.set("operation", operation);
+                  if (from) params.set("from", from);
+                  if (to) params.set("to", to);
+                  return fetchAllFilteredTransactions("/admin/v1/transactions", params);
+                }}
+              />
               <PaginationBar pagination={pagination} onPageChange={setPage} />
             </div>
           )}
