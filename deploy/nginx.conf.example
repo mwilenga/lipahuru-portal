@@ -1,11 +1,13 @@
-# Example nginx site config for LipaHuru Portal
-# PM2 runs Next.js on 127.0.0.1:3001 (see ecosystem.config.cjs)
+# Example nginx configs for LipaHuru Portal
+# PM2 apps (see ecosystem.config.cjs):
+#   lipahuru-portal-prod     → 127.0.0.1:3001
+#   lipahuru-portal-sandbox  → 127.0.0.1:3002
 
+# --- Production ---
 server {
     listen 80;
     server_name portal.yourdomain.com;
 
-    # Redirect HTTP to HTTPS in production
     # return 301 https://$host$request_uri;
 
     location / {
@@ -21,23 +23,20 @@ server {
     }
 }
 
-# HTTPS example (uncomment and adjust paths)
-# server {
-#     listen 443 ssl http2;
-#     server_name portal.yourdomain.com;
-#
-#     ssl_certificate     /etc/letsencrypt/live/portal.yourdomain.com/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/portal.yourdomain.com/privkey.pem;
-#
-#     location / {
-#         proxy_pass http://127.0.0.1:3001;
-#         proxy_http_version 1.1;
-#         proxy_set_header Upgrade $http_upgrade;
-#         proxy_set_header Connection "upgrade";
-#         proxy_set_header Host $host;
-#         proxy_set_header X-Real-IP $remote_addr;
-#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-#         proxy_set_header X-Forwarded-Proto $scheme;
-#         proxy_cache_bypass $http_upgrade;
-#     }
-# }
+# --- Sandbox ---
+server {
+    listen 80;
+    server_name portal-sandbox.yourdomain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
