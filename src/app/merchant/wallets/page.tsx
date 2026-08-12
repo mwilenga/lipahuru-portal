@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import { Badge, Card } from "@/components/ui/primitives";
+import { Badge, Button, Card } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import { formatMoney, providerColor } from "@/lib/format";
 import type { Wallet } from "@/types/api";
@@ -28,11 +29,17 @@ export default function MerchantWalletsPage() {
         title="My wallets"
         subtitle="Live balances across all providers and child wallets"
       >
+        <div className="mb-4 flex justify-end">
+          <Link href="/merchant/float-topups">
+            <Button type="button">Request float topup</Button>
+          </Link>
+        </div>
+
         {parent ? (
           <Card className="mb-6">
             <div className="flex items-center justify-between">
               <div className="text-sm text-slate-400">Parent wallet</div>
-              <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+              <Badge className="border-emerald-500/30 bg-emerald-500/15 text-emerald-300">
                 ACTIVE
               </Badge>
             </div>
