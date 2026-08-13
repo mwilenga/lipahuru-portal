@@ -116,3 +116,29 @@ export interface MerchantCommission {
   value: string;
 }
 
+export interface FloatTopupItem {
+  providerCode?: string;
+  providerName?: string;
+  walletId: number;
+  amount: string;
+}
+
+export interface FloatTopup {
+  id: number;
+  topupId: string;
+  merchantId: number;
+  merchantName?: string;
+  source: "MERCHANT" | "ADMIN";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  currency: string;
+  totalAmount: string;
+  reference?: string;
+  notes?: string;
+  rejectionReason?: string;
+  items: FloatTopupItem[];
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
