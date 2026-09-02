@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Repeat,
   Store,
   Wallet,
   X,
@@ -26,16 +25,13 @@ const HEADER_ROW = "flex h-[4.5rem] shrink-0 items-center overflow-hidden px-4 m
 const adminNav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
-  { href: "/admin/float-topups", label: "Float Topups", icon: CircleDollarSign },
-  { href: "/admin/transfers", label: "Transfers", icon: Repeat },
+  { href: "/admin/balance-credits", label: "Balance Credits", icon: CircleDollarSign },
   { href: "/admin/transactions", label: "Transactions", icon: CreditCard },
 ];
 
 const merchantNav = [
   { href: "/merchant", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/merchant/wallets", label: "My Wallets", icon: Wallet },
-  { href: "/merchant/float-topups", label: "Float Topups", icon: CircleDollarSign },
-  { href: "/merchant/transfers", label: "Transfers", icon: Repeat },
+  { href: "/merchant/wallets", label: "My Balance", icon: Wallet },
   { href: "/merchant/collections", label: "Collections", icon: ArrowDownLeft },
   { href: "/merchant/disbursements", label: "Disbursements", icon: ArrowUpRight },
 ];
