@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Shield, Store, Wallet } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Wallet } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { homeForRole, saveSession } from "@/lib/auth";
-import type { AuthUser } from "@/types/api";
+import Logo from "@/components/Logo";
+import type { AuthUser, UserRole } from "@/types/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"merchant" | "admin">("merchant");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,37 +22,23 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (mode === "admin") {
-        const data = await apiFetch<{
-          token: string;
-          user: AuthUser;
-        }>("/admin/v1/login", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
+      const data = await apiFetch<{
+        token: string;
+        role: UserRole;
+        user: AuthUser;
+      }>("/v1/portal/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
 
-        saveSession(data.token, "admin", data.user);
-        router.push(homeForRole("admin"));
-      } else {
-        const data = await apiFetch<{
-          token: string;
-          user: AuthUser;
-        }>("/v1/merchant/login", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
-
-        saveSession(data.token, "merchant", data.user);
-        router.push(homeForRole("merchant"));
-      }
+      saveSession(data.token, data.role, data.user);
+      router.push(homeForRole(data.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }
   }
-
-  const isAdmin = mode === "admin";
 
   return (
     <div className="login-shell relative min-h-screen overflow-hidden">
@@ -63,9 +49,7 @@ export default function LoginPage() {
       <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-12">
         <section className="mb-10 max-w-xl lg:mb-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-lg font-bold text-[#1a0a00] shadow-lg shadow-amber-500/25">
-              LH
-            </div>
+            <Logo size={48} gradientId="lhMarkLogin" />
             <div>
               <div className="text-lg font-semibold tracking-tight text-white">LipaHuru</div>
               <div className="text-xs uppercase tracking-[0.22em] text-amber-200/70">
@@ -107,40 +91,11 @@ export default function LoginPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-white">Sign in</h2>
               <p className="mt-2 text-sm text-slate-400">
-                {isAdmin
-                  ? "Platform administration access"
-                  : "Merchant portal access"}
+                Use your work email to open the merchant or admin dashboard.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/8 bg-black/30 p-1.5">
-              <button
-                type="button"
-                onClick={() => setMode("merchant")}
-                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  !isAdmin
-                    ? "bg-amber-500/20 text-amber-100 shadow-inner shadow-amber-500/10"
-                    : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                <Store className="h-4 w-4" />
-                Merchant
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("admin")}
-                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  isAdmin
-                    ? "bg-violet-500/25 text-violet-100 shadow-inner shadow-violet-500/10"
-                    : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                <Shield className="h-4 w-4" />
-                Super Admin
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
                   Email
@@ -150,9 +105,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder={
-                    isAdmin ? "admin@lipahuru.test" : "merchant@example.com"
-                  }
+                  placeholder="you@company.com"
                   className="login-input w-full rounded-xl px-4 py-2.5 text-sm transition"
                 />
               </div>

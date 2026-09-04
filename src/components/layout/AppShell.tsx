@@ -19,6 +19,7 @@ import clsx from "clsx";
 import type { UserRole } from "@/types/api";
 import { clearSession, getUser } from "@/lib/auth";
 import { confirmLogout } from "@/lib/confirm";
+import Logo from "@/components/Logo";
 
 const HEADER_ROW = "flex h-[4.5rem] shrink-0 items-center overflow-hidden px-4 md:px-6";
 
@@ -39,9 +40,7 @@ const merchantNav = [
 function SidebarBrand() {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 text-sm font-bold text-slate-950">
-        LH
-      </div>
+      <Logo size={40} gradientId="lhMarkSidebar" />
       <div className="min-w-0">
         <div className="text-sm font-semibold text-white">LipaHuru</div>
         <div className="text-[10px] uppercase tracking-wider text-slate-500">
