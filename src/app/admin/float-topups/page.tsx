@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -18,6 +17,7 @@ import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch, ApiError } from "@/lib/api";
+import { captureApproveIntent, clearApproveIntent } from "@/lib/auth";
 import { confirmApprove } from "@/lib/confirm";
 import { formatMoney, providerColor, statusColor } from "@/lib/format";
 import { FLOAT_TOPUP_STATUS_OPTIONS } from "@/lib/select-options";
@@ -27,7 +27,6 @@ const PER_PAGE = 10;
 const NETWORKS = ["VODACOM", "AIRTEL", "YAS", "HALOTEL"] as const;
 
 export default function AdminFloatTopupsPage() {
-  const router = useRouter();
   const approveHandled = useRef(false);
   const [topups, setTopups] = useState<FloatTopup[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -128,16 +127,22 @@ export default function AdminFloatTopupsPage() {
   useEffect(() => {
     if (approveHandled.current) return;
 
-    const raw = new URLSearchParams(window.location.search).get("approve");
+    const raw = captureApproveIntent("topup");
     if (!raw) return;
 
     const approveId = Number(raw);
-    if (!Number.isFinite(approveId) || approveId <= 0) return;
+    if (!Number.isFinite(approveId) || approveId <= 0) {
+      clearApproveIntent("topup");
+      return;
+    }
 
     approveHandled.current = true;
     setStatus("PENDING");
     setHighlightId(approveId);
-    router.replace("/admin/float-topups");
+
+    if (window.location.search.includes("approve=")) {
+      window.history.replaceState({}, "", "/admin/float-topups");
+    }
 
     void (async () => {
       try {
@@ -150,23 +155,26 @@ export default function AdminFloatTopupsPage() {
           `/admin/v1/float-topups?${params.toString()}`,
         );
         const topup = data.topups.find((item) => item.id === approveId);
+        clearApproveIntent("topup");
         if (!topup) {
           setActionError(
             "This float topup is not pending anymore, or was not found.",
           );
+          setLoading(false);
           return;
         }
         setTopups(data.topups.slice(0, PER_PAGE));
         setLoading(false);
         await approveTopup(topup);
       } catch (err) {
+        clearApproveIntent("topup");
         setActionError(
           err instanceof ApiError ? err.message : "Could not open approval",
         );
         setLoading(false);
       }
     })();
-  }, [router]);
+  }, []);
 
   function openRejectTopup(topup: FloatTopup) {
     setRejectError(null);
