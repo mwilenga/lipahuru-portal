@@ -387,7 +387,7 @@ export default function MerchantTransfersPage() {
                 className="flex-1"
                 onClick={() => setFiltersOpen(false)}
               >
-                Done
+                Apply
               </Button>
             </div>
           </div>
