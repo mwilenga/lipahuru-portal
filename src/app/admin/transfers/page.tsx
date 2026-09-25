@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -36,6 +37,8 @@ function walletLabel(wallet: TransferableWallet): string {
 }
 
 export default function AdminTransfersPage() {
+  const router = useRouter();
+  const approveHandled = useRef(false);
   const [transfers, setTransfers] = useState<WalletTransfer[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -62,6 +65,7 @@ export default function AdminTransfersPage() {
   const [rejectTarget, setRejectTarget] = useState<WalletTransfer | null>(null);
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [rejectError, setRejectError] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
 
   const merchantFilterOptions = useMemo(
     () => [
@@ -196,6 +200,49 @@ export default function AdminTransfersPage() {
       setActionError(err instanceof ApiError ? err.message : "Approve failed");
     }
   }
+
+  useEffect(() => {
+    if (approveHandled.current) return;
+
+    const raw = new URLSearchParams(window.location.search).get("approve");
+    if (!raw) return;
+
+    const approveId = Number(raw);
+    if (!Number.isFinite(approveId) || approveId <= 0) return;
+
+    approveHandled.current = true;
+    setStatus("PENDING_APPROVAL");
+    setHighlightId(approveId);
+    router.replace("/admin/transfers");
+
+    void (async () => {
+      try {
+        const params = new URLSearchParams({
+          page: "1",
+          perPage: "100",
+          status: "PENDING_APPROVAL",
+        });
+        const data = await apiFetch<{ transfers: WalletTransfer[] }>(
+          `/admin/v1/wallet-transfers?${params.toString()}`,
+        );
+        const transfer = data.transfers.find((item) => item.id === approveId);
+        if (!transfer) {
+          setActionError(
+            "This transfer is not pending anymore, or was not found.",
+          );
+          return;
+        }
+        setTransfers(data.transfers.slice(0, PER_PAGE));
+        setLoading(false);
+        await approveTransfer(transfer);
+      } catch (err) {
+        setActionError(
+          err instanceof ApiError ? err.message : "Could not open approval",
+        );
+        setLoading(false);
+      }
+    })();
+  }, [router]);
 
   function openRejectTransfer(transfer: WalletTransfer) {
     setRejectError(null);
@@ -360,7 +407,11 @@ export default function AdminTransfersPage() {
                   {transfers.map((transfer) => (
                     <tr
                       key={transfer.id}
-                      className="border-t border-[var(--card-border)]"
+                      className={`border-t border-[var(--card-border)] ${
+                        highlightId === transfer.id
+                          ? "bg-teal-500/10 ring-1 ring-inset ring-teal-500/40"
+                          : ""
+                      }`}
                     >
                       <td className="px-3 py-3">
                         <div className="font-mono text-xs text-slate-200">

@@ -1,20 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ArrowRight, Eye, EyeOff, Wallet } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import { homeForRole, saveSession } from "@/lib/auth";
+import {
+  getRole,
+  homeForRole,
+  safeNextPath,
+  saveSession,
+} from "@/lib/auth";
 import Logo from "@/components/Logo";
 import type { AuthUser, UserRole } from "@/types/api";
 
+function readNextParam(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("next");
+}
+
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const role = getRole();
+    if (!role) return;
+    const next = safeNextPath(readNextParam(), role);
+    window.location.replace(next ?? homeForRole(role));
+  }, []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -32,10 +47,10 @@ export default function LoginPage() {
       });
 
       saveSession(data.token, data.role, data.user);
-      router.push(homeForRole(data.role));
+      const next = safeNextPath(readNextParam(), data.role);
+      window.location.assign(next ?? homeForRole(data.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
-    } finally {
       setLoading(false);
     }
   }
