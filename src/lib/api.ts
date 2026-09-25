@@ -33,10 +33,19 @@ export async function apiFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new ApiError(
+      `Cannot reach API at ${API_URL}${path}. Check NEXT_PUBLIC_API_URL, that the API is running, and CORS_ALLOWED_ORIGINS.`,
+      0,
+    );
+  }
 
   const raw = await response.text();
   let payload: ApiEnvelope<T> | null = null;
