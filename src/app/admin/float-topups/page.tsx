@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -25,7 +26,10 @@ import type { FloatTopup, Merchant, Pagination } from "@/types/api";
 const PER_PAGE = 10;
 const NETWORKS = ["VODACOM", "AIRTEL", "YAS", "HALOTEL"] as const;
 
-export default function AdminFloatTopupsPage() {
+function AdminFloatTopupsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const approveHandled = useRef(false);
   const [topups, setTopups] = useState<FloatTopup[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -43,6 +47,7 @@ export default function AdminFloatTopupsPage() {
   const [rejectTarget, setRejectTarget] = useState<FloatTopup | null>(null);
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [rejectError, setRejectError] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
 
   const merchantOptions = useMemo(
     () => [
@@ -120,6 +125,45 @@ export default function AdminFloatTopupsPage() {
       setActionError(err instanceof ApiError ? err.message : "Approve failed");
     }
   }
+
+  useEffect(() => {
+    const raw = searchParams.get("approve");
+    if (!raw || approveHandled.current) return;
+
+    const approveId = Number(raw);
+    if (!Number.isFinite(approveId) || approveId <= 0) return;
+
+    approveHandled.current = true;
+    setStatus("PENDING");
+    setHighlightId(approveId);
+    router.replace("/admin/float-topups");
+
+    void (async () => {
+      try {
+        const params = new URLSearchParams({
+          page: "1",
+          perPage: "100",
+          status: "PENDING",
+        });
+        const data = await apiFetch<{ topups: FloatTopup[] }>(
+          `/admin/v1/float-topups?${params.toString()}`,
+        );
+        const topup = data.topups.find((item) => item.id === approveId);
+        if (!topup) {
+          setActionError(
+            "This float topup is not pending anymore, or was not found.",
+          );
+          return;
+        }
+        setTopups(data.topups.slice(0, PER_PAGE));
+        await approveTopup(topup);
+      } catch (err) {
+        setActionError(
+          err instanceof ApiError ? err.message : "Could not open approval",
+        );
+      }
+    })();
+  }, [searchParams, router]);
 
   function openRejectTopup(topup: FloatTopup) {
     setRejectError(null);
@@ -258,7 +302,14 @@ export default function AdminFloatTopupsPage() {
               </thead>
               <tbody>
                 {topups.map((topup) => (
-                  <tr key={topup.id} className="border-t border-[var(--card-border)]">
+                  <tr
+                    key={topup.id}
+                    className={`border-t border-[var(--card-border)] ${
+                      highlightId === topup.id
+                        ? "bg-teal-500/10 ring-1 ring-inset ring-teal-500/40"
+                        : ""
+                    }`}
+                  >
                     <td className="px-3 py-3">
                       <div className="font-mono text-xs text-slate-200">{topup.topupId}</div>
                       {topup.reference ? (
@@ -424,5 +475,25 @@ export default function AdminFloatTopupsPage() {
         />
       </AppShell>
     </AuthGuard>
+  );
+}
+
+export default function AdminFloatTopupsPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthGuard role="admin">
+          <AppShell
+            role="admin"
+            title="Float Topups"
+            subtitle="Approve merchant float requests or credit disbursement wallets directly"
+          >
+            <PageLoader label="Loading topup requests…" />
+          </AppShell>
+        </AuthGuard>
+      }
+    >
+      <AdminFloatTopupsContent />
+    </Suspense>
   );
 }

@@ -44,3 +44,14 @@ export function getUser(): AuthUser | null {
 export function homeForRole(role: UserRole): string {
   return role === "admin" ? "/admin" : "/merchant";
 }
+
+/** Same-origin relative path only (blocks open redirects). */
+export function safeNextPath(
+  next: string | null | undefined,
+  role: UserRole,
+): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  if (role === "admin" && next.startsWith("/admin")) return next;
+  if (role === "merchant" && next.startsWith("/merchant")) return next;
+  return null;
+}

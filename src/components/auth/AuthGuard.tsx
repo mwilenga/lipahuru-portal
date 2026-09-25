@@ -19,7 +19,8 @@ export function AuthGuard({
     const currentRole = getRole();
 
     if (!currentRole) {
-      router.replace("/login");
+      const next = `${window.location.pathname}${window.location.search}`;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
 

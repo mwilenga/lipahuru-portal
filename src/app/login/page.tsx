@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Wallet } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import { homeForRole, saveSession } from "@/lib/auth";
+import { homeForRole, safeNextPath, saveSession } from "@/lib/auth";
 import Logo from "@/components/Logo";
 import type { AuthUser, UserRole } from "@/types/api";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +33,8 @@ export default function LoginPage() {
       });
 
       saveSession(data.token, data.role, data.user);
-      router.push(homeForRole(data.role));
+      const next = safeNextPath(searchParams.get("next"), data.role);
+      router.push(next ?? homeForRole(data.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -164,5 +166,19 @@ export default function LoginPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="login-shell flex min-h-screen items-center justify-center text-slate-400">
+          Loading…
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
