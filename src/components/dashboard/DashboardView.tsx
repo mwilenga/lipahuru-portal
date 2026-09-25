@@ -9,8 +9,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
-import { Badge, Card } from "@/components/ui/primitives";
-import { formatMoney as fmt, providerColor } from "@/lib/format";
+import { Card } from "@/components/ui/primitives";
+import { formatMoney as fmt } from "@/lib/format";
 import type { PortalDashboard } from "@/types/api";
 
 function StatCard({
@@ -98,28 +98,6 @@ export function DashboardView({
           accent="bg-blue-500/10"
         />
       </div>
-
-      <Card>
-        <h3 className="text-lg font-medium text-white">Provider balances</h3>
-        <div className="mt-4 grid grid-cols-12 gap-3">
-          {(dashboard?.providerWallets ?? []).map((wallet) => (
-            <div
-              key={`${wallet.providerCode ?? wallet.name}`}
-              className="col-span-12 rounded-xl border border-[var(--card-border)] bg-slate-950 p-4 sm:col-span-6"
-            >
-              <Badge className={providerColor(wallet.providerCode)}>
-                {wallet.providerCode ?? wallet.name}
-              </Badge>
-              <div className="mt-3 text-xl font-semibold text-white">
-                {fmt(wallet.total, wallet.currency)}
-              </div>
-            </div>
-          ))}
-          {(dashboard?.providerWallets?.length ?? 0) === 0 ? (
-            <p className="col-span-12 text-sm text-slate-500">No provider wallets yet.</p>
-          ) : null}
-        </div>
-      </Card>
 
       <Card>
         <div className="mb-4 flex items-center justify-between">

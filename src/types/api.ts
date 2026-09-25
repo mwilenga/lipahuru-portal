@@ -116,3 +116,66 @@ export interface MerchantCommission {
   value: string;
 }
 
+export interface FloatTopupItem {
+  providerCode?: string;
+  providerName?: string;
+  walletId: number;
+  amount: string;
+}
+
+export interface FloatTopup {
+  id: number;
+  topupId: string;
+  merchantId: number;
+  merchantName?: string;
+  source: "MERCHANT" | "ADMIN";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  currency: string;
+  totalAmount: string;
+  reference?: string;
+  notes?: string;
+  rejectionReason?: string;
+  items: FloatTopupItem[];
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TransferableWallet {
+  walletId: number;
+  name: string;
+  walletType: "COLLECTION_LEAF" | "DISBURSEMENT_LEAF";
+  providerCode?: string;
+  currency: string;
+  available: string;
+}
+
+export interface WalletTransferWallet {
+  walletId: number;
+  name: string;
+  walletType?: string;
+  providerCode?: string;
+  currency?: string;
+}
+
+export interface WalletTransfer {
+  id: number;
+  transferId: string;
+  merchantId: number;
+  merchantName?: string;
+  fromWallet?: WalletTransferWallet | null;
+  toWallet?: WalletTransferWallet | null;
+  amount: string;
+  currency: string;
+  status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
+  source: "MERCHANT" | "ADMIN";
+  reference?: string;
+  notes?: string;
+  rejectionReason?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

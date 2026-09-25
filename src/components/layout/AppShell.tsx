@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  CircleDollarSign,
   CreditCard,
   LayoutDashboard,
   LogOut,
   Menu,
+  Repeat,
   Store,
   Wallet,
   X,
@@ -18,18 +20,24 @@ import clsx from "clsx";
 import type { UserRole } from "@/types/api";
 import { clearSession, getUser } from "@/lib/auth";
 import { confirmLogout } from "@/lib/confirm";
+import Logo from "@/components/Logo";
 
 const HEADER_ROW = "flex h-[4.5rem] shrink-0 items-center overflow-hidden px-4 md:px-6";
 
 const adminNav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
+  { href: "/admin/balance-credits", label: "Balance Credits", icon: CircleDollarSign },
+  { href: "/admin/float-topups", label: "Float Topups", icon: CircleDollarSign },
+  { href: "/admin/transfers", label: "Transfers", icon: Repeat },
   { href: "/admin/transactions", label: "Transactions", icon: CreditCard },
 ];
 
 const merchantNav = [
   { href: "/merchant", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/merchant/wallets", label: "My Wallets", icon: Wallet },
+  { href: "/merchant/wallets", label: "My Balance", icon: Wallet },
+  { href: "/merchant/float-topups", label: "Float Topups", icon: CircleDollarSign },
+  { href: "/merchant/transfers", label: "Transfers", icon: Repeat },
   { href: "/merchant/collections", label: "Collections", icon: ArrowDownLeft },
   { href: "/merchant/disbursements", label: "Disbursements", icon: ArrowUpRight },
 ];
@@ -37,9 +45,7 @@ const merchantNav = [
 function SidebarBrand() {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 text-sm font-bold text-slate-950">
-        LH
-      </div>
+      <Logo size={40} gradientId="lhMarkSidebar" />
       <div className="min-w-0">
         <div className="text-sm font-semibold text-white">LipaHuru</div>
         <div className="text-[10px] uppercase tracking-wider text-slate-500">
