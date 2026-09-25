@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import {
+  RowActionsMenu,
+  rowActionItemClass,
+} from "@/components/ui/RowActionsMenu";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
@@ -257,23 +262,28 @@ export default function AdminFloatTopupsPage() {
                     </td>
                     <td className="px-3 py-3">
                       {topup.status === "PENDING" ? (
-                        <div className="flex flex-wrap gap-2">
-                          <Button
+                        <RowActionsMenu>
+                          <button
                             type="button"
-                            className="px-3 py-1.5 text-xs"
-                            onClick={() => approveTopup(topup)}
+                            className={`${rowActionItemClass} text-emerald-300`}
+                            onClick={() => void approveTopup(topup)}
                           >
-                            Approve
-                          </Button>
-                          <Button
+                            <span className="inline-flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4" />
+                              Approve
+                            </span>
+                          </button>
+                          <button
                             type="button"
-                            variant="secondary"
-                            className="px-3 py-1.5 text-xs"
-                            onClick={() => rejectTopup(topup)}
+                            className={`${rowActionItemClass} text-red-300`}
+                            onClick={() => void rejectTopup(topup)}
                           >
-                            Reject
-                          </Button>
-                        </div>
+                            <span className="inline-flex items-center gap-2">
+                              <Ban className="h-4 w-4" />
+                              Reject
+                            </span>
+                          </button>
+                        </RowActionsMenu>
                       ) : (
                         <span className="text-xs text-slate-500">
                           {topup.reviewedBy ? `By ${topup.reviewedBy}` : "—"}

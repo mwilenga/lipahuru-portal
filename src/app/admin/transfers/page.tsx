@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { WalletTransferExportMenu } from "@/components/transfers/WalletTransferExportMenu";
@@ -8,6 +9,10 @@ import { DateInput } from "@/components/ui/DateInput";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import {
+  RowActionsMenu,
+  rowActionItemClass,
+} from "@/components/ui/RowActionsMenu";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
@@ -367,23 +372,28 @@ export default function AdminTransfersPage() {
                       </td>
                       <td className="px-3 py-3">
                         {transfer.status === "PENDING_APPROVAL" ? (
-                          <div className="flex flex-wrap gap-2">
-                            <Button
+                          <RowActionsMenu>
+                            <button
                               type="button"
-                              className="px-3 py-1.5 text-xs"
-                              onClick={() => approveTransfer(transfer)}
+                              className={`${rowActionItemClass} text-emerald-300`}
+                              onClick={() => void approveTransfer(transfer)}
                             >
-                              Approve
-                            </Button>
-                            <Button
+                              <span className="inline-flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4" />
+                                Approve
+                              </span>
+                            </button>
+                            <button
                               type="button"
-                              variant="secondary"
-                              className="px-3 py-1.5 text-xs"
-                              onClick={() => rejectTransfer(transfer)}
+                              className={`${rowActionItemClass} text-red-300`}
+                              onClick={() => void rejectTransfer(transfer)}
                             >
-                              Reject
-                            </Button>
-                          </div>
+                              <span className="inline-flex items-center gap-2">
+                                <Ban className="h-4 w-4" />
+                                Reject
+                              </span>
+                            </button>
+                          </RowActionsMenu>
                         ) : (
                           <span className="text-xs text-slate-500">
                             {transfer.reviewedBy ? `By ${transfer.reviewedBy}` : "—"}
