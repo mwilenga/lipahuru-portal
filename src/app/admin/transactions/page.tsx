@@ -163,35 +163,19 @@ export default function AdminTransactionsPage() {
         subtitle="All merchant collections and disbursements"
       >
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Card className="min-w-0 flex-1 !p-4 sm:!p-5">
-              <div className="text-xs uppercase tracking-wide text-slate-500">
-                Total amount (filtered)
-              </div>
-              <div className="mt-2 text-3xl font-semibold text-white">
-                {summary
-                  ? formatMoney(summary.totalAmount, summary.currency)
-                  : "—"}
-              </div>
-              <div className="mt-1 text-sm text-slate-400">
-                {summary ? `${summary.count} transaction(s)` : "Loading..."}
-              </div>
-            </Card>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setFiltersOpen(true)}
-              className="gap-2 self-start"
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-              {activeFilterCount > 0 ? (
-                <span className="rounded-full bg-teal-500/20 px-1.5 py-0.5 text-xs text-teal-200">
-                  {activeFilterCount}
-                </span>
-              ) : null}
-            </Button>
-          </div>
+          <Card className="w-full !p-4 md:w-1/3 md:max-w-sm">
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              Total amount (filtered)
+            </div>
+            <div className="mt-1.5 text-2xl font-semibold text-white">
+              {summary
+                ? formatMoney(summary.totalAmount, summary.currency)
+                : "—"}
+            </div>
+            <div className="mt-1 text-sm text-slate-400">
+              {summary ? `${summary.count} transaction(s)` : "Loading..."}
+            </div>
+          </Card>
 
           {loading ? (
             <div className="text-slate-400">Loading transactions...</div>
@@ -202,6 +186,22 @@ export default function AdminTransactionsPage() {
                 showMerchant
                 title="Transactions"
                 exportFilename="admin-transactions"
+                toolbarActions={
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setFiltersOpen(true)}
+                    className="gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    {activeFilterCount > 0 ? (
+                      <span className="rounded-full bg-teal-500/20 px-1.5 py-0.5 text-xs text-teal-200">
+                        {activeFilterCount}
+                      </span>
+                    ) : null}
+                  </Button>
+                }
                 loadExportRows={async () => {
                   const params = new URLSearchParams();
                   if (merchantId) params.set("merchantId", merchantId);
