@@ -11,12 +11,15 @@ export function SlidePanel({
   onClose,
   children,
   panelClassName,
+  size = "md",
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
   panelClassName?: string;
+  /** md ≈ 28rem; half ≈ 50% of the viewport on sm+ */
+  size?: "md" | "half";
 }) {
   const isClient = useSyncExternalStore(
     () => () => {},
@@ -52,12 +55,15 @@ export function SlidePanel({
         aria-labelledby="slide-panel-title"
         aria-modal="true"
         className={clsx(
-          "relative flex h-full w-full flex-col border-l border-[var(--card-border)] bg-[var(--card)] shadow-2xl sm:max-w-md",
+          "relative flex h-full w-full flex-col border-l border-[var(--card-border)] bg-[var(--card)] shadow-2xl",
+          size === "half"
+            ? "sm:w-1/2 sm:max-w-none"
+            : "sm:w-full sm:max-w-md",
           panelClassName,
         )}
         role="dialog"
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--card-border)] px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--card-border)] px-4 py-3 sm:px-6">
           <h2 className="text-base font-semibold text-white" id="slide-panel-title">
             {title}
           </h2>
@@ -70,7 +76,9 @@ export function SlidePanel({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 text-slate-100">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 text-slate-100 sm:p-6">
+          {children}
+        </div>
       </div>
     </div>,
     document.body,

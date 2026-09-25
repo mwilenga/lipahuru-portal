@@ -12,7 +12,7 @@ APP_NAME="${2:-}"
 PORT="${3:-}"
 
 if [[ -z "$ENV_NAME" || -z "$APP_NAME" || -z "$PORT" ]]; then
-  echo "Usage: source deploy/_common.sh <sandbox|prod> <pm2-app-name> <port>"
+  echo "Usage: source deploy/_common.sh <uat|prod> <pm2-app-name> <port>"
   exit 1
 fi
 

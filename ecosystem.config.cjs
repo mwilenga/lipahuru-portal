@@ -5,7 +5,7 @@ const root = path.resolve(__dirname);
 module.exports = {
   apps: [
     {
-      name: "lipahuru-portal-sandbox",
+      name: "lipahuru-portal-uat",
       cwd: root,
       script: "node_modules/next/dist/bin/next",
       args: "start -p 3002",
@@ -18,8 +18,8 @@ module.exports = {
         NODE_ENV: "production",
         PORT: 3002,
       },
-      error_file: "./deploy/logs/pm2-error-sandbox.log",
-      out_file: "./deploy/logs/pm2-out-sandbox.log",
+      error_file: "./deploy/logs/pm2-error-uat.log",
+      out_file: "./deploy/logs/pm2-out-uat.log",
       merge_logs: true,
       time: true,
     },

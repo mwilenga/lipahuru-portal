@@ -38,3 +38,10 @@ export const FLOAT_TOPUP_STATUS_OPTIONS: StaticSearchableSelectOption[] = [
   { value: "APPROVED", label: "APPROVED" },
   { value: "REJECTED", label: "REJECTED" },
 ];
+
+export const WALLET_TRANSFER_STATUS_OPTIONS: StaticSearchableSelectOption[] = [
+  { value: "", label: "All" },
+  { value: "PENDING_APPROVAL", label: "PENDING_APPROVAL" },
+  { value: "APPROVED", label: "APPROVED" },
+  { value: "REJECTED", label: "REJECTED" },
+];

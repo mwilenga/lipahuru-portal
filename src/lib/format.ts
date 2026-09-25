@@ -112,6 +112,7 @@ export function statusColor(status?: string): string {
     case "REJECTED":
       return "bg-red-500/15 text-red-300 border-red-500/30";
     case "PENDING":
+    case "PENDING_APPROVAL":
     case "PENDING_FINAL":
     case "ACKNOWLEDGED":
       return "bg-amber-500/15 text-amber-300 border-amber-500/30";

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { TransactionExportMenu } from "@/components/transactions/TransactionExportMenu";
 import { Badge } from "@/components/ui/primitives";
@@ -13,6 +14,7 @@ export function TransactionTable({
   exportFilename = "transactions",
   loadExportRows,
   showHeader = true,
+  toolbarActions,
 }: {
   transactions: Transaction[];
   showMerchant?: boolean;
@@ -20,6 +22,7 @@ export function TransactionTable({
   exportFilename?: string;
   loadExportRows?: () => Promise<Transaction[]>;
   showHeader?: boolean;
+  toolbarActions?: ReactNode;
 }) {
   const canExport = Boolean(loadExportRows);
 
@@ -118,17 +121,20 @@ export function TransactionTable({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card)]">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--card-border)] px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--card-border)] px-4 py-3">
         <h3 className="text-base font-medium text-white">{title}</h3>
-        {canExport && loadExportRows ? (
-          <TransactionExportMenu
-            title={title}
-            filename={exportFilename}
-            showMerchant={showMerchant}
-            disabled={transactions.length === 0}
-            loadRows={loadExportRows}
-          />
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {toolbarActions}
+          {canExport && loadExportRows ? (
+            <TransactionExportMenu
+              title={title}
+              filename={exportFilename}
+              showMerchant={showMerchant}
+              disabled={transactions.length === 0}
+              loadRows={loadExportRows}
+            />
+          ) : null}
+        </div>
       </div>
       {tableBody}
     </div>

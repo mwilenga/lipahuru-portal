@@ -102,7 +102,7 @@ export function SearchableSelect({
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  const canSearch = query.trim().length >= minChars;
+  const canSearch = minChars <= 0 || query.trim().length >= minChars;
 
   const menu = open ? (
     <div

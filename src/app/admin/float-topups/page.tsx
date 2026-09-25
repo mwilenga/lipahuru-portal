@@ -1,15 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
+import {
+  RowActionsMenu,
+  rowActionItemClass,
+} from "@/components/ui/RowActionsMenu";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch, ApiError } from "@/lib/api";
+import { confirmApprove } from "@/lib/confirm";
 import { formatMoney, providerColor, statusColor } from "@/lib/format";
 import { FLOAT_TOPUP_STATUS_OPTIONS } from "@/lib/select-options";
 import type { FloatTopup, Merchant, Pagination } from "@/types/api";
@@ -32,6 +40,9 @@ export default function AdminFloatTopupsPage() {
   const [directNotes, setDirectNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<FloatTopup | null>(null);
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   const merchantOptions = useMemo(
     () => [
@@ -92,6 +103,13 @@ export default function AdminFloatTopupsPage() {
   }, [loadTopups, page]);
 
   async function approveTopup(topup: FloatTopup) {
+    const confirmed = await confirmApprove({
+      title: "Approve float topup?",
+      text: `Credit ${formatMoney(topup.totalAmount, topup.currency)} to ${topup.merchantName ?? "merchant"} (${topup.topupId}).`,
+      confirmButtonText: "Yes, approve",
+    });
+    if (!confirmed) return;
+
     setActionError(null);
     try {
       await apiFetch(`/admin/v1/float-topups/${topup.id}/approve`, {
@@ -103,19 +121,30 @@ export default function AdminFloatTopupsPage() {
     }
   }
 
-  async function rejectTopup(topup: FloatTopup) {
-    const reason = window.prompt(`Reject ${topup.topupId}? Optional reason:`);
-    if (reason === null) return;
+  function openRejectTopup(topup: FloatTopup) {
+    setRejectError(null);
+    setRejectTarget(topup);
+  }
 
+  async function submitRejectTopup(reason: string) {
+    if (!rejectTarget) return;
+
+    setRejectSubmitting(true);
+    setRejectError(null);
     setActionError(null);
     try {
-      await apiFetch(`/admin/v1/float-topups/${topup.id}/reject`, {
+      await apiFetch(`/admin/v1/float-topups/${rejectTarget.id}/reject`, {
         method: "POST",
-        body: JSON.stringify({ reason: reason.trim() || undefined }),
+        body: JSON.stringify({ reason: reason || undefined }),
       });
+      setRejectTarget(null);
       await loadTopups(page);
     } catch (err) {
-      setActionError(err instanceof ApiError ? err.message : "Reject failed");
+      const message = err instanceof ApiError ? err.message : "Reject failed";
+      setRejectError(message);
+      setActionError(message);
+    } finally {
+      setRejectSubmitting(false);
     }
   }
 
@@ -173,8 +202,8 @@ export default function AdminFloatTopupsPage() {
         title="Float Topups"
         subtitle="Approve merchant float requests or credit disbursement wallets directly"
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <FilterCard className="flex-1">
+        <div className="space-y-4">
+          <FilterCard>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <FilterField label="Status">
                 <StaticSearchableSelect
@@ -194,21 +223,25 @@ export default function AdminFloatTopupsPage() {
               </FilterField>
             </div>
           </FilterCard>
-          <Button type="button" onClick={() => setDirectOpen(true)}>
-            Direct topup
-          </Button>
-        </div>
 
-        {actionError ? (
-          <p className="mb-3 text-sm text-rose-300">{actionError}</p>
-        ) : null}
+          {actionError ? (
+            <p className="text-sm text-rose-300">{actionError}</p>
+          ) : null}
 
-        <Card>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-white">Topup requests</h2>
-            {loading ? <span className="text-xs text-slate-500">Loading…</span> : null}
-          </div>
+          <Card>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-medium text-white">Topup requests</h2>
+              </div>
+              <Button type="button" onClick={() => setDirectOpen(true)}>
+                Direct topup
+              </Button>
+            </div>
 
+            {loading ? (
+              <PageLoader label="Loading topup requests…" />
+            ) : (
+              <>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="text-xs uppercase text-slate-500">
@@ -257,23 +290,28 @@ export default function AdminFloatTopupsPage() {
                     </td>
                     <td className="px-3 py-3">
                       {topup.status === "PENDING" ? (
-                        <div className="flex flex-wrap gap-2">
-                          <Button
+                        <RowActionsMenu>
+                          <button
                             type="button"
-                            className="px-3 py-1.5 text-xs"
-                            onClick={() => approveTopup(topup)}
+                            className={`${rowActionItemClass} text-emerald-300`}
+                            onClick={() => void approveTopup(topup)}
                           >
-                            Approve
-                          </Button>
-                          <Button
+                            <span className="inline-flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4" />
+                              Approve
+                            </span>
+                          </button>
+                          <button
                             type="button"
-                            variant="secondary"
-                            className="px-3 py-1.5 text-xs"
-                            onClick={() => rejectTopup(topup)}
+                            className={`${rowActionItemClass} text-red-300`}
+                            onClick={() => openRejectTopup(topup)}
                           >
-                            Reject
-                          </Button>
-                        </div>
+                            <span className="inline-flex items-center gap-2">
+                              <Ban className="h-4 w-4" />
+                              Reject
+                            </span>
+                          </button>
+                        </RowActionsMenu>
                       ) : (
                         <span className="text-xs text-slate-500">
                           {topup.reviewedBy ? `By ${topup.reviewedBy}` : "—"}
@@ -282,7 +320,7 @@ export default function AdminFloatTopupsPage() {
                     </td>
                   </tr>
                 ))}
-                {!loading && topups.length === 0 ? (
+                {topups.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-3 py-8 text-center text-slate-500">
                       No float topups found.
@@ -294,11 +332,15 @@ export default function AdminFloatTopupsPage() {
           </div>
 
           <PaginationBar pagination={pagination} onPageChange={setPage} />
+              </>
+            )}
         </Card>
+        </div>
 
         <SlidePanel
           open={directOpen}
           title="Direct float topup"
+          size="half"
           onClose={() => setDirectOpen(false)}
         >
           <form onSubmit={submitDirectTopup} className="space-y-4">
@@ -361,6 +403,25 @@ export default function AdminFloatTopupsPage() {
             </Button>
           </form>
         </SlidePanel>
+
+        <RejectReasonPanel
+          open={rejectTarget !== null}
+          title="Reject float topup"
+          description={
+            rejectTarget
+              ? `Reject ${rejectTarget.topupId} for ${rejectTarget.merchantName ?? "merchant"}.`
+              : undefined
+          }
+          submitLabel="Reject topup"
+          submitting={rejectSubmitting}
+          error={rejectError}
+          onClose={() => {
+            if (rejectSubmitting) return;
+            setRejectTarget(null);
+            setRejectError(null);
+          }}
+          onSubmit={submitRejectTopup}
+        />
       </AppShell>
     </AuthGuard>
   );

@@ -9,9 +9,13 @@ import { MerchantOnboardPanel } from "@/components/merchants/MerchantOnboardPane
 import { MerchantSlidePanel } from "@/components/merchants/MerchantSlidePanel";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
 import { Badge, Button } from "@/components/ui/primitives";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiRequest, ApiError } from "@/lib/api";
+import { confirmApprove } from "@/lib/confirm";
 import { statusColor } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import type { Merchant, Pagination } from "@/types/api";
 
 type PanelTab = "overview" | "credentials" | "commission";
@@ -28,6 +32,9 @@ function AdminMerchantsContent() {
   const [panelTab, setPanelTab] = useState<PanelTab>("overview");
   const [panelOpen, setPanelOpen] = useState(false);
   const [onboardOpen, setOnboardOpen] = useState(false);
+  const [disableTarget, setDisableTarget] = useState<Merchant | null>(null);
+  const [disableSubmitting, setDisableSubmitting] = useState(false);
+  const [disableError, setDisableError] = useState<string | null>(null);
 
   const loadMerchants = useCallback((pageNum: number) => {
     setLoading(true);
@@ -73,32 +80,70 @@ function AdminMerchantsContent() {
   }
 
   async function approveMerchant(merchant: Merchant) {
-    await apiFetch(`/admin/v1/merchants/${merchant.id}/approve`, { method: "POST" });
-    setMerchants((prev) =>
-      prev.map((item) =>
-        item.id === merchant.id ? { ...item, status: "ACTIVE" } : item,
-      ),
-    );
+    const isEnable = merchant.status === "SUSPENDED";
+    const confirmed = await confirmApprove({
+      title: isEnable ? "Enable merchant?" : "Approve merchant?",
+      text: isEnable
+        ? `Re-enable ${merchant.name} so they can process payments again.`
+        : `Approve ${merchant.name} and activate their account.`,
+      confirmButtonText: isEnable ? "Yes, enable" : "Yes, approve",
+    });
+    if (!confirmed) return;
+
+    try {
+      const { message } = await apiRequest(
+        `/admin/v1/merchants/${merchant.id}/approve`,
+        { method: "POST" },
+      );
+      setMerchants((prev) =>
+        prev.map((item) =>
+          item.id === merchant.id ? { ...item, status: "ACTIVE" } : item,
+        ),
+      );
+      toast.success(message);
+    } catch (err) {
+      toast.fromError(
+        err,
+        isEnable ? "Failed to enable merchant" : "Failed to approve merchant",
+      );
+    }
   }
 
-  async function disableMerchant(merchant: Merchant) {
-    if (
-      !window.confirm(
-        `Disable ${merchant.name}? They will not be able to process payments.`,
-      )
-    ) {
-      return;
-    }
+  function openDisableMerchant(merchant: Merchant) {
+    setDisableError(null);
+    setDisableTarget(merchant);
+  }
 
-    await apiFetch(`/admin/v1/merchants/${merchant.id}/suspend`, {
-      method: "POST",
-      body: JSON.stringify({ reason: "Disabled by admin" }),
-    });
-    setMerchants((prev) =>
-      prev.map((item) =>
-        item.id === merchant.id ? { ...item, status: "SUSPENDED" } : item,
-      ),
-    );
+  async function submitDisableMerchant(reason: string) {
+    if (!disableTarget) return;
+
+    setDisableSubmitting(true);
+    setDisableError(null);
+    try {
+      const { message } = await apiRequest(
+        `/admin/v1/merchants/${disableTarget.id}/suspend`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            reason: reason || "Disabled by admin",
+          }),
+        },
+      );
+      setMerchants((prev) =>
+        prev.map((item) =>
+          item.id === disableTarget.id ? { ...item, status: "SUSPENDED" } : item,
+        ),
+      );
+      setDisableTarget(null);
+      toast.success(message);
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Disable failed";
+      setDisableError(message);
+      toast.error(message);
+    } finally {
+      setDisableSubmitting(false);
+    }
   }
 
   return (
@@ -110,7 +155,7 @@ function AdminMerchantsContent() {
       >
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-slate-400">
-            {pagination ? `${pagination.total} merchants` : "Loading..."}
+            {pagination ? `${pagination.total} merchants` : "—"}
           </div>
           <Button type="button" onClick={() => setOnboardOpen(true)} className="w-full sm:w-auto">
             Onboard merchant
@@ -118,7 +163,7 @@ function AdminMerchantsContent() {
         </div>
 
         {loading ? (
-          <div className="text-slate-400">Loading merchants...</div>
+          <PageLoader label="Loading merchants…" />
         ) : merchants.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--card-border)] p-10 text-center text-sm text-slate-500">
             No merchants yet. Onboard your first merchant to get started.
@@ -175,8 +220,8 @@ function AdminMerchantsContent() {
                           merchant={merchant}
                           onEdit={() => openPanel(merchant.id, "overview")}
                           onCredentials={() => openPanel(merchant.id, "credentials")}
-                          onApprove={() => approveMerchant(merchant)}
-                          onDisable={() => disableMerchant(merchant)}
+                          onApprove={() => void approveMerchant(merchant)}
+                          onDisable={() => openDisableMerchant(merchant)}
                         />
                       </td>
                     </tr>
@@ -204,6 +249,25 @@ function AdminMerchantsContent() {
             void loadMerchants(1);
           }}
         />
+
+        <RejectReasonPanel
+          open={disableTarget !== null}
+          title="Disable merchant"
+          description={
+            disableTarget
+              ? `Disable ${disableTarget.name}. They will not be able to process payments.`
+              : undefined
+          }
+          submitLabel="Disable merchant"
+          submitting={disableSubmitting}
+          error={disableError}
+          onClose={() => {
+            if (disableSubmitting) return;
+            setDisableTarget(null);
+            setDisableError(null);
+          }}
+          onSubmit={submitDisableMerchant}
+        />
       </AppShell>
     </AuthGuard>
   );
@@ -219,7 +283,7 @@ export default function AdminMerchantsPage() {
             title="Merchants"
             subtitle="Onboard and manage merchant accounts"
           >
-            <div className="text-slate-400">Loading merchants...</div>
+            <PageLoader label="Loading merchants…" />
           </AppShell>
         </AuthGuard>
       }

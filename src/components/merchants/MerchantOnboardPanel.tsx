@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { Button, Input } from "@/components/ui/primitives";
-import { apiFetch } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 import { copyText } from "@/lib/clipboard";
+import { toast } from "@/lib/toast";
 
 function CredentialField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -83,7 +84,7 @@ export function MerchantOnboardPanel({
         phone: form.phone || undefined,
       };
 
-      const data = await apiFetch<{
+      const { data, message } = await apiRequest<{
         clientId: string;
         clientSecret: string;
         portalEmail: string;
@@ -99,9 +100,13 @@ export function MerchantOnboardPanel({
         portalEmail: data.portalEmail,
         portalPassword: data.portalPassword,
       });
+      toast.success(message);
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create merchant");
+      const message =
+        err instanceof Error ? err.message : "Failed to create merchant";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -112,7 +117,7 @@ export function MerchantOnboardPanel({
       open={open}
       title={credentials ? "Merchant created" : "Onboard merchant"}
       onClose={onClose}
-      panelClassName="w-full max-w-none md:w-1/2"
+      size="half"
     >
       {credentials ? (
         <div className="space-y-4">

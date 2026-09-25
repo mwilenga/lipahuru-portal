@@ -14,10 +14,15 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(
+export type ApiSuccess<T> = {
+  data: T;
+  message: string;
+};
+
+export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
-): Promise<T> {
+): Promise<ApiSuccess<T>> {
   const token = getToken();
   const headers = new Headers(options.headers);
 
@@ -33,10 +38,19 @@ export async function apiFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new ApiError(
+      `Cannot reach API at ${API_URL}${path}. Check NEXT_PUBLIC_API_URL, that the API is running, and CORS_ALLOWED_ORIGINS.`,
+      0,
+    );
+  }
 
   const raw = await response.text();
   let payload: ApiEnvelope<T> | null = null;
@@ -70,5 +84,16 @@ export async function apiFetch<T>(
     );
   }
 
-  return payload.data;
+  return {
+    data: payload.data,
+    message: payload.message?.trim() || "Done",
+  };
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const { data } = await apiRequest<T>(path, options);
+  return data;
 }

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Copy, RefreshCw } from "lucide-react";
 import { Button, Card } from "@/components/ui/primitives";
-import { apiFetch } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 import { copyText } from "@/lib/clipboard";
+import { toast } from "@/lib/toast";
 import type { MerchantCredentials } from "@/types/api";
 
 function CredentialField({
@@ -102,10 +103,12 @@ export function CredentialsPanel({
     setError("");
 
     try {
-      const data = await apiFetch<{ clientId: string; clientSecret: string }>(
-        `/admin/v1/merchants/${merchantId}/rotate-credentials`,
-        { method: "POST" },
-      );
+      const { data, message } = await apiRequest<{
+        clientId: string;
+        clientSecret: string;
+      }>(`/admin/v1/merchants/${merchantId}/rotate-credentials`, {
+        method: "POST",
+      });
 
       setRevealed({
         clientId: data.clientId,
@@ -117,8 +120,12 @@ export function CredentialsPanel({
         clientId: data.clientId,
         clientStatus: "ACTIVE",
       }));
+      toast.success(message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to regenerate API secret");
+      const message =
+        err instanceof Error ? err.message : "Failed to regenerate API secret";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(null);
     }
@@ -137,10 +144,12 @@ export function CredentialsPanel({
     setError("");
 
     try {
-      const data = await apiFetch<{ portalEmail: string; portalPassword: string }>(
-        `/admin/v1/merchants/${merchantId}/reset-portal-password`,
-        { method: "POST" },
-      );
+      const { data, message } = await apiRequest<{
+        portalEmail: string;
+        portalPassword: string;
+      }>(`/admin/v1/merchants/${merchantId}/reset-portal-password`, {
+        method: "POST",
+      });
 
       setRevealed({
         portalEmail: data.portalEmail,
@@ -151,8 +160,12 @@ export function CredentialsPanel({
         ...prev,
         portalEmail: data.portalEmail,
       }));
+      toast.success(message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset portal password");
+      const message =
+        err instanceof Error ? err.message : "Failed to reset portal password";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(null);
     }

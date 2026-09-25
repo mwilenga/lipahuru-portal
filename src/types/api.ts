@@ -142,3 +142,40 @@ export interface FloatTopup {
   updatedAt?: string;
 }
 
+export interface TransferableWallet {
+  walletId: number;
+  name: string;
+  walletType: "COLLECTION_LEAF" | "DISBURSEMENT_LEAF";
+  providerCode?: string;
+  currency: string;
+  available: string;
+}
+
+export interface WalletTransferWallet {
+  walletId: number;
+  name: string;
+  walletType?: string;
+  providerCode?: string;
+  currency?: string;
+}
+
+export interface WalletTransfer {
+  id: number;
+  transferId: string;
+  merchantId: number;
+  merchantName?: string;
+  fromWallet?: WalletTransferWallet | null;
+  toWallet?: WalletTransferWallet | null;
+  amount: string;
+  currency: string;
+  status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
+  source: "MERCHANT" | "ADMIN";
+  reference?: string;
+  notes?: string;
+  rejectionReason?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
