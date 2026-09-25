@@ -84,7 +84,7 @@ export default function AdminTransfersPage() {
       instantWallets.map((wallet) => ({
         value: String(wallet.walletId),
         label: walletLabel(wallet),
-        description: wallet.walletType.replace("_", " "),
+        description: (wallet.walletType ?? "").replace(/_/g, " "),
       })),
     [instantWallets],
   );
@@ -96,7 +96,7 @@ export default function AdminTransfersPage() {
         .map((wallet) => ({
           value: String(wallet.walletId),
           label: walletLabel(wallet),
-          description: wallet.walletType.replace("_", " "),
+          description: (wallet.walletType ?? "").replace(/_/g, " "),
         })),
     [instantWallets, fromWalletId],
   );

@@ -33,6 +33,8 @@ export default function MerchantTransfersPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [wallets, setWallets] = useState<TransferableWallet[]>([]);
+  const [walletsLoading, setWalletsLoading] = useState(false);
+  const [walletsError, setWalletsError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -62,7 +64,7 @@ export default function MerchantTransfersPage() {
       wallets.map((wallet) => ({
         value: String(wallet.walletId),
         label: walletLabel(wallet),
-        description: wallet.walletType.replace("_", " "),
+        description: (wallet.walletType ?? "").replace(/_/g, " "),
       })),
     [wallets],
   );
@@ -74,7 +76,7 @@ export default function MerchantTransfersPage() {
         .map((wallet) => ({
           value: String(wallet.walletId),
           label: walletLabel(wallet),
-          description: wallet.walletType.replace("_", " "),
+          description: (wallet.walletType ?? "").replace(/_/g, " "),
         })),
     [wallets, fromWalletId],
   );
@@ -99,13 +101,58 @@ export default function MerchantTransfersPage() {
     [search, status, from, to],
   );
 
-  const loadWallets = useCallback(
-    () =>
-      apiFetch<{ wallets: TransferableWallet[] }>(
-        "/v1/portal/wallet-transfers/transferable-wallets",
-      ).then((data) => setWallets(data.wallets)),
-    [],
-  );
+  const loadWallets = useCallback(async () => {
+    setWalletsLoading(true);
+    setWalletsError(null);
+    try {
+      try {
+        const data = await apiFetch<{ wallets: TransferableWallet[] }>(
+          "/v1/portal/wallet-transfers/transferable-wallets",
+        );
+        setWallets(data.wallets ?? []);
+        return;
+      } catch {
+        // Fall back to the wallets list if the dedicated endpoint is unavailable.
+      }
+
+      const all = await apiFetch<
+        Array<{
+          walletId: number;
+          name: string;
+          walletType: string;
+          providerCode?: string;
+          currency: string;
+          available: string;
+          isActive?: boolean;
+        }>
+      >("/v1/portal/wallets");
+
+      const leaves = all.filter(
+        (wallet) =>
+          wallet.isActive !== false &&
+          (wallet.walletType === "COLLECTION_LEAF" ||
+            wallet.walletType === "DISBURSEMENT_LEAF"),
+      );
+
+      setWallets(
+        leaves.map((wallet) => ({
+          walletId: wallet.walletId,
+          name: wallet.name,
+          walletType: wallet.walletType as TransferableWallet["walletType"],
+          providerCode: wallet.providerCode,
+          currency: wallet.currency,
+          available: wallet.available,
+        })),
+      );
+    } catch (err) {
+      setWallets([]);
+      setWalletsError(
+        err instanceof ApiError ? err.message : "Failed to load wallets",
+      );
+    } finally {
+      setWalletsLoading(false);
+    }
+  }, []);
 
   const loadTransfers = useCallback(
     (pageNum: number) => {
@@ -125,6 +172,12 @@ export default function MerchantTransfersPage() {
   useEffect(() => {
     void loadWallets();
   }, [loadWallets]);
+
+  useEffect(() => {
+    if (panelOpen) {
+      void loadWallets();
+    }
+  }, [panelOpen, loadWallets]);
 
   useEffect(() => {
     setPage(1);
@@ -347,6 +400,18 @@ export default function MerchantTransfersPage() {
           onClose={() => setPanelOpen(false)}
         >
           <form onSubmit={submitTransfer} className="space-y-4">
+            {walletsLoading ? (
+              <p className="text-sm text-slate-400">Loading wallets…</p>
+            ) : null}
+            {walletsError ? (
+              <p className="text-sm text-rose-300">{walletsError}</p>
+            ) : null}
+            {!walletsLoading && !walletsError && wallets.length === 0 ? (
+              <p className="text-sm text-amber-300">
+                No collection or disbursement wallets found for transfers.
+              </p>
+            ) : null}
+
             <FilterField label="From wallet">
               <StaticSearchableSelect
                 value={fromWalletId}
@@ -356,6 +421,7 @@ export default function MerchantTransfersPage() {
                 }}
                 options={fromOptions}
                 placeholder="Select source wallet"
+                disabled={walletsLoading || fromOptions.length === 0}
               />
             </FilterField>
             <FilterField label="To wallet">
@@ -364,6 +430,7 @@ export default function MerchantTransfersPage() {
                 onChange={setToWalletId}
                 options={toOptions}
                 placeholder="Select destination wallet"
+                disabled={walletsLoading || toOptions.length === 0}
               />
             </FilterField>
             <FilterField label="Amount">

@@ -37,9 +37,9 @@ export function FilterField({
   children: ReactNode;
 }) {
   return (
-    <label className="flex min-w-0 flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5">
       <span className="text-xs font-medium text-slate-500">{label}</span>
       {children}
-    </label>
+    </div>
   );
 }
