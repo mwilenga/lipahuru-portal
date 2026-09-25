@@ -9,6 +9,7 @@ import { DateInput } from "@/components/ui/DateInput";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
 import {
   RowActionsMenu,
   rowActionItemClass,
@@ -17,6 +18,7 @@ import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch, ApiError } from "@/lib/api";
+import { confirmApprove } from "@/lib/confirm";
 import { formatMoney, statusColor } from "@/lib/format";
 import { WALLET_TRANSFER_STATUS_OPTIONS } from "@/lib/select-options";
 import type {
@@ -56,6 +58,9 @@ export default function AdminTransfersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [panelError, setPanelError] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<WalletTransfer | null>(null);
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   const merchantFilterOptions = useMemo(
     () => [
@@ -173,6 +178,13 @@ export default function AdminTransfersPage() {
   }, [instantMerchantId]);
 
   async function approveTransfer(transfer: WalletTransfer) {
+    const confirmed = await confirmApprove({
+      title: "Approve transfer?",
+      text: `Move ${formatMoney(transfer.amount, transfer.currency)} for ${transfer.merchantName ?? "merchant"} (${transfer.transferId}).`,
+      confirmButtonText: "Yes, approve",
+    });
+    if (!confirmed) return;
+
     setActionError(null);
     try {
       await apiFetch(`/admin/v1/wallet-transfers/${transfer.id}/approve`, {
@@ -184,21 +196,30 @@ export default function AdminTransfersPage() {
     }
   }
 
-  async function rejectTransfer(transfer: WalletTransfer) {
-    const reason = window.prompt(
-      `Reject ${transfer.transferId}? Optional reason:`,
-    );
-    if (reason === null) return;
+  function openRejectTransfer(transfer: WalletTransfer) {
+    setRejectError(null);
+    setRejectTarget(transfer);
+  }
 
+  async function submitRejectTransfer(reason: string) {
+    if (!rejectTarget) return;
+
+    setRejectSubmitting(true);
+    setRejectError(null);
     setActionError(null);
     try {
-      await apiFetch(`/admin/v1/wallet-transfers/${transfer.id}/reject`, {
+      await apiFetch(`/admin/v1/wallet-transfers/${rejectTarget.id}/reject`, {
         method: "POST",
-        body: JSON.stringify({ reason: reason.trim() || undefined }),
+        body: JSON.stringify({ reason: reason || undefined }),
       });
+      setRejectTarget(null);
       await loadTransfers(page);
     } catch (err) {
-      setActionError(err instanceof ApiError ? err.message : "Reject failed");
+      const message = err instanceof ApiError ? err.message : "Reject failed";
+      setRejectError(message);
+      setActionError(message);
+    } finally {
+      setRejectSubmitting(false);
     }
   }
 
@@ -386,7 +407,7 @@ export default function AdminTransfersPage() {
                             <button
                               type="button"
                               className={`${rowActionItemClass} text-red-300`}
-                              onClick={() => void rejectTransfer(transfer)}
+                              onClick={() => openRejectTransfer(transfer)}
                             >
                               <span className="inline-flex items-center gap-2">
                                 <Ban className="h-4 w-4" />
@@ -509,6 +530,25 @@ export default function AdminTransfersPage() {
             </Button>
           </form>
         </SlidePanel>
+
+        <RejectReasonPanel
+          open={rejectTarget !== null}
+          title="Reject transfer"
+          description={
+            rejectTarget
+              ? `Reject ${rejectTarget.transferId} for ${rejectTarget.merchantName ?? "merchant"}.`
+              : undefined
+          }
+          submitLabel="Reject transfer"
+          submitting={rejectSubmitting}
+          error={rejectError}
+          onClose={() => {
+            if (rejectSubmitting) return;
+            setRejectTarget(null);
+            setRejectError(null);
+          }}
+          onSubmit={submitRejectTransfer}
+        />
       </AppShell>
     </AuthGuard>
   );

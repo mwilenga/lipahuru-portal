@@ -17,8 +17,8 @@ export function MerchantActionMenu({
   merchant: Merchant;
   onEdit: () => void;
   onCredentials: () => void;
-  onApprove: () => Promise<void>;
-  onDisable: () => Promise<void>;
+  onApprove: () => void | Promise<void>;
+  onDisable: () => void;
 }) {
   return (
     <RowActionsMenu>

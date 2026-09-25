@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
 import {
   RowActionsMenu,
   rowActionItemClass,
@@ -15,6 +16,7 @@ import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch, ApiError } from "@/lib/api";
+import { confirmApprove } from "@/lib/confirm";
 import { formatMoney, providerColor, statusColor } from "@/lib/format";
 import { FLOAT_TOPUP_STATUS_OPTIONS } from "@/lib/select-options";
 import type { FloatTopup, Merchant, Pagination } from "@/types/api";
@@ -37,6 +39,9 @@ export default function AdminFloatTopupsPage() {
   const [directNotes, setDirectNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<FloatTopup | null>(null);
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   const merchantOptions = useMemo(
     () => [
@@ -97,6 +102,13 @@ export default function AdminFloatTopupsPage() {
   }, [loadTopups, page]);
 
   async function approveTopup(topup: FloatTopup) {
+    const confirmed = await confirmApprove({
+      title: "Approve float topup?",
+      text: `Credit ${formatMoney(topup.totalAmount, topup.currency)} to ${topup.merchantName ?? "merchant"} (${topup.topupId}).`,
+      confirmButtonText: "Yes, approve",
+    });
+    if (!confirmed) return;
+
     setActionError(null);
     try {
       await apiFetch(`/admin/v1/float-topups/${topup.id}/approve`, {
@@ -108,19 +120,30 @@ export default function AdminFloatTopupsPage() {
     }
   }
 
-  async function rejectTopup(topup: FloatTopup) {
-    const reason = window.prompt(`Reject ${topup.topupId}? Optional reason:`);
-    if (reason === null) return;
+  function openRejectTopup(topup: FloatTopup) {
+    setRejectError(null);
+    setRejectTarget(topup);
+  }
 
+  async function submitRejectTopup(reason: string) {
+    if (!rejectTarget) return;
+
+    setRejectSubmitting(true);
+    setRejectError(null);
     setActionError(null);
     try {
-      await apiFetch(`/admin/v1/float-topups/${topup.id}/reject`, {
+      await apiFetch(`/admin/v1/float-topups/${rejectTarget.id}/reject`, {
         method: "POST",
-        body: JSON.stringify({ reason: reason.trim() || undefined }),
+        body: JSON.stringify({ reason: reason || undefined }),
       });
+      setRejectTarget(null);
       await loadTopups(page);
     } catch (err) {
-      setActionError(err instanceof ApiError ? err.message : "Reject failed");
+      const message = err instanceof ApiError ? err.message : "Reject failed";
+      setRejectError(message);
+      setActionError(message);
+    } finally {
+      setRejectSubmitting(false);
     }
   }
 
@@ -276,7 +299,7 @@ export default function AdminFloatTopupsPage() {
                           <button
                             type="button"
                             className={`${rowActionItemClass} text-red-300`}
-                            onClick={() => void rejectTopup(topup)}
+                            onClick={() => openRejectTopup(topup)}
                           >
                             <span className="inline-flex items-center gap-2">
                               <Ban className="h-4 w-4" />
@@ -372,6 +395,25 @@ export default function AdminFloatTopupsPage() {
             </Button>
           </form>
         </SlidePanel>
+
+        <RejectReasonPanel
+          open={rejectTarget !== null}
+          title="Reject float topup"
+          description={
+            rejectTarget
+              ? `Reject ${rejectTarget.topupId} for ${rejectTarget.merchantName ?? "merchant"}.`
+              : undefined
+          }
+          submitLabel="Reject topup"
+          submitting={rejectSubmitting}
+          error={rejectError}
+          onClose={() => {
+            if (rejectSubmitting) return;
+            setRejectTarget(null);
+            setRejectError(null);
+          }}
+          onSubmit={submitRejectTopup}
+        />
       </AppShell>
     </AuthGuard>
   );
