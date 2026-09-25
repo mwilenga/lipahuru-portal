@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
 import {
@@ -231,15 +232,16 @@ export default function AdminFloatTopupsPage() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-medium text-white">Topup requests</h2>
-                {loading ? (
-                  <span className="text-xs text-slate-500">Loading…</span>
-                ) : null}
               </div>
               <Button type="button" onClick={() => setDirectOpen(true)}>
                 Direct topup
               </Button>
             </div>
 
+            {loading ? (
+              <PageLoader label="Loading topup requests…" />
+            ) : (
+              <>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="text-xs uppercase text-slate-500">
@@ -318,7 +320,7 @@ export default function AdminFloatTopupsPage() {
                     </td>
                   </tr>
                 ))}
-                {!loading && topups.length === 0 ? (
+                {topups.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-3 py-8 text-center text-slate-500">
                       No float topups found.
@@ -330,6 +332,8 @@ export default function AdminFloatTopupsPage() {
           </div>
 
           <PaginationBar pagination={pagination} onPageChange={setPage} />
+              </>
+            )}
         </Card>
         </div>
 

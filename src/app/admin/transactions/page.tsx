@@ -8,6 +8,7 @@ import { TransactionTable } from "@/components/transactions/TransactionTable";
 import { FilterField } from "@/components/ui/FilterCard";
 import { DateInput } from "@/components/ui/DateInput";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Button, Card, Input } from "@/components/ui/primitives";
@@ -173,12 +174,12 @@ export default function AdminTransactionsPage() {
                 : "—"}
             </div>
             <div className="mt-1 text-sm text-slate-400">
-              {summary ? `${summary.count} transaction(s)` : "Loading..."}
+              {summary ? `${summary.count} transaction(s)` : "—"}
             </div>
           </Card>
 
           {loading ? (
-            <div className="text-slate-400">Loading transactions...</div>
+            <PageLoader label="Loading transactions…" />
           ) : (
             <div>
               <TransactionTable

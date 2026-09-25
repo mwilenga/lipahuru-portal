@@ -155,7 +155,7 @@ function AdminMerchantsContent() {
       >
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-slate-400">
-            {pagination ? `${pagination.total} merchants` : "Loading..."}
+            {pagination ? `${pagination.total} merchants` : "—"}
           </div>
           <Button type="button" onClick={() => setOnboardOpen(true)} className="w-full sm:w-auto">
             Onboard merchant
@@ -283,7 +283,7 @@ export default function AdminMerchantsPage() {
             title="Merchants"
             subtitle="Onboard and manage merchant accounts"
           >
-            <div className="text-slate-400">Loading merchants...</div>
+            <PageLoader label="Loading merchants…" />
           </AppShell>
         </AuthGuard>
       }

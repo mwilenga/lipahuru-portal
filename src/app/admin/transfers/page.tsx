@@ -8,6 +8,7 @@ import { WalletTransferExportMenu } from "@/components/transfers/WalletTransferE
 import { DateInput } from "@/components/ui/DateInput";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
 import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
 import {
@@ -317,9 +318,6 @@ export default function AdminTransfersPage() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-medium text-white">Transfer requests</h2>
-                {loading ? (
-                  <span className="text-xs text-slate-500">Loading…</span>
-                ) : null}
               </div>
               <div className="flex items-center gap-2">
                 <WalletTransferExportMenu
@@ -339,6 +337,10 @@ export default function AdminTransfersPage() {
               </div>
             </div>
 
+            {loading ? (
+              <PageLoader label="Loading transfer requests…" />
+            ) : (
+              <>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="text-xs uppercase text-slate-500">
@@ -423,7 +425,7 @@ export default function AdminTransfersPage() {
                       </td>
                     </tr>
                   ))}
-                  {!loading && transfers.length === 0 ? (
+                  {transfers.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-3 py-8 text-center text-slate-500">
                         No transfers found.
@@ -435,6 +437,8 @@ export default function AdminTransfersPage() {
             </div>
 
             <PaginationBar pagination={pagination} onPageChange={setPage} />
+              </>
+            )}
           </Card>
         </div>
 

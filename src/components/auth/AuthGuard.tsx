@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { getRole, homeForRole } from "@/lib/auth";
 
 export function AuthGuard({
@@ -32,8 +33,8 @@ export function AuthGuard({
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] text-slate-400">
-        Loading...
+      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+        <PageLoader label="Preparing portal…" />
       </div>
     );
   }
