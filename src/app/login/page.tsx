@@ -4,18 +4,14 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Eye, EyeOff, Wallet } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import {
+  consumeNextPath,
   getRole,
   homeForRole,
-  safeNextPath,
+  rememberLoginDeepLink,
   saveSession,
 } from "@/lib/auth";
 import Logo from "@/components/Logo";
 import type { AuthUser, UserRole } from "@/types/api";
-
-function readNextParam(): string | null {
-  if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get("next");
-}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,9 +21,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    rememberLoginDeepLink();
+
     const role = getRole();
     if (!role) return;
-    const next = safeNextPath(readNextParam(), role);
+    const next = consumeNextPath(role);
     window.location.replace(next ?? homeForRole(role));
   }, []);
 
@@ -47,7 +45,7 @@ export default function LoginPage() {
       });
 
       saveSession(data.token, data.role, data.user);
-      const next = safeNextPath(readNextParam(), data.role);
+      const next = consumeNextPath(data.role);
       window.location.assign(next ?? homeForRole(data.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
