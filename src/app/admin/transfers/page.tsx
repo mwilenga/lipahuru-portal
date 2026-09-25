@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -36,9 +36,8 @@ function walletLabel(wallet: TransferableWallet): string {
   return `${wallet.name} — ${formatMoney(wallet.available, wallet.currency)}`;
 }
 
-function AdminTransfersContent() {
+export default function AdminTransfersPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const approveHandled = useRef(false);
   const [transfers, setTransfers] = useState<WalletTransfer[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -203,8 +202,10 @@ function AdminTransfersContent() {
   }
 
   useEffect(() => {
-    const raw = searchParams.get("approve");
-    if (!raw || approveHandled.current) return;
+    if (approveHandled.current) return;
+
+    const raw = new URLSearchParams(window.location.search).get("approve");
+    if (!raw) return;
 
     const approveId = Number(raw);
     if (!Number.isFinite(approveId) || approveId <= 0) return;
@@ -232,14 +233,16 @@ function AdminTransfersContent() {
           return;
         }
         setTransfers(data.transfers.slice(0, PER_PAGE));
+        setLoading(false);
         await approveTransfer(transfer);
       } catch (err) {
         setActionError(
           err instanceof ApiError ? err.message : "Could not open approval",
         );
+        setLoading(false);
       }
     })();
-  }, [searchParams, router]);
+  }, [router]);
 
   function openRejectTransfer(transfer: WalletTransfer) {
     setRejectError(null);
@@ -603,25 +606,5 @@ function AdminTransfersContent() {
         />
       </AppShell>
     </AuthGuard>
-  );
-}
-
-export default function AdminTransfersPage() {
-  return (
-    <Suspense
-      fallback={
-        <AuthGuard role="admin">
-          <AppShell
-            role="admin"
-            title="Transfers"
-            subtitle="Approve merchant wallet transfers or move funds instantly"
-          >
-            <PageLoader label="Loading transfer requests…" />
-          </AppShell>
-        </AuthGuard>
-      }
-    >
-      <AdminTransfersContent />
-    </Suspense>
   );
 }

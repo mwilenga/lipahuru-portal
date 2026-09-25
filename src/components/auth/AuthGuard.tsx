@@ -20,7 +20,9 @@ export function AuthGuard({
 
     if (!currentRole) {
       const next = `${window.location.pathname}${window.location.search}`;
-      router.replace(`/login?next=${encodeURIComponent(next)}`);
+      // Hard navigation so SMS deep-links always reach login instead of
+      // hanging on the preparing state when the router soft-replace stalls.
+      window.location.replace(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
 

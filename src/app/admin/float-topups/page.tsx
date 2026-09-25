@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Ban, CheckCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -26,9 +26,8 @@ import type { FloatTopup, Merchant, Pagination } from "@/types/api";
 const PER_PAGE = 10;
 const NETWORKS = ["VODACOM", "AIRTEL", "YAS", "HALOTEL"] as const;
 
-function AdminFloatTopupsContent() {
+export default function AdminFloatTopupsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const approveHandled = useRef(false);
   const [topups, setTopups] = useState<FloatTopup[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -127,8 +126,10 @@ function AdminFloatTopupsContent() {
   }
 
   useEffect(() => {
-    const raw = searchParams.get("approve");
-    if (!raw || approveHandled.current) return;
+    if (approveHandled.current) return;
+
+    const raw = new URLSearchParams(window.location.search).get("approve");
+    if (!raw) return;
 
     const approveId = Number(raw);
     if (!Number.isFinite(approveId) || approveId <= 0) return;
@@ -156,14 +157,16 @@ function AdminFloatTopupsContent() {
           return;
         }
         setTopups(data.topups.slice(0, PER_PAGE));
+        setLoading(false);
         await approveTopup(topup);
       } catch (err) {
         setActionError(
           err instanceof ApiError ? err.message : "Could not open approval",
         );
+        setLoading(false);
       }
     })();
-  }, [searchParams, router]);
+  }, [router]);
 
   function openRejectTopup(topup: FloatTopup) {
     setRejectError(null);
@@ -475,25 +478,5 @@ function AdminFloatTopupsContent() {
         />
       </AppShell>
     </AuthGuard>
-  );
-}
-
-export default function AdminFloatTopupsPage() {
-  return (
-    <Suspense
-      fallback={
-        <AuthGuard role="admin">
-          <AppShell
-            role="admin"
-            title="Float Topups"
-            subtitle="Approve merchant float requests or credit disbursement wallets directly"
-          >
-            <PageLoader label="Loading topup requests…" />
-          </AppShell>
-        </AuthGuard>
-      }
-    >
-      <AdminFloatTopupsContent />
-    </Suspense>
   );
 }
