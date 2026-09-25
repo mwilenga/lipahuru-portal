@@ -9,11 +9,13 @@ import { MerchantOnboardPanel } from "@/components/merchants/MerchantOnboardPane
 import { MerchantSlidePanel } from "@/components/merchants/MerchantSlidePanel";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { RejectReasonPanel } from "@/components/ui/RejectReasonPanel";
 import { Badge, Button } from "@/components/ui/primitives";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, apiRequest, ApiError } from "@/lib/api";
 import { confirmApprove } from "@/lib/confirm";
 import { statusColor } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import type { Merchant, Pagination } from "@/types/api";
 
 type PanelTab = "overview" | "credentials" | "commission";
@@ -88,12 +90,23 @@ function AdminMerchantsContent() {
     });
     if (!confirmed) return;
 
-    await apiFetch(`/admin/v1/merchants/${merchant.id}/approve`, { method: "POST" });
-    setMerchants((prev) =>
-      prev.map((item) =>
-        item.id === merchant.id ? { ...item, status: "ACTIVE" } : item,
-      ),
-    );
+    try {
+      const { message } = await apiRequest(
+        `/admin/v1/merchants/${merchant.id}/approve`,
+        { method: "POST" },
+      );
+      setMerchants((prev) =>
+        prev.map((item) =>
+          item.id === merchant.id ? { ...item, status: "ACTIVE" } : item,
+        ),
+      );
+      toast.success(message);
+    } catch (err) {
+      toast.fromError(
+        err,
+        isEnable ? "Failed to enable merchant" : "Failed to approve merchant",
+      );
+    }
   }
 
   function openDisableMerchant(merchant: Merchant) {
@@ -107,22 +120,27 @@ function AdminMerchantsContent() {
     setDisableSubmitting(true);
     setDisableError(null);
     try {
-      await apiFetch(`/admin/v1/merchants/${disableTarget.id}/suspend`, {
-        method: "POST",
-        body: JSON.stringify({
-          reason: reason || "Disabled by admin",
-        }),
-      });
+      const { message } = await apiRequest(
+        `/admin/v1/merchants/${disableTarget.id}/suspend`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            reason: reason || "Disabled by admin",
+          }),
+        },
+      );
       setMerchants((prev) =>
         prev.map((item) =>
           item.id === disableTarget.id ? { ...item, status: "SUSPENDED" } : item,
         ),
       );
       setDisableTarget(null);
+      toast.success(message);
     } catch (err) {
-      setDisableError(
-        err instanceof ApiError ? err.message : "Disable failed",
-      );
+      const message =
+        err instanceof ApiError ? err.message : "Disable failed";
+      setDisableError(message);
+      toast.error(message);
     } finally {
       setDisableSubmitting(false);
     }
@@ -145,7 +163,7 @@ function AdminMerchantsContent() {
         </div>
 
         {loading ? (
-          <div className="text-slate-400">Loading merchants...</div>
+          <PageLoader label="Loading merchants…" />
         ) : merchants.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--card-border)] p-10 text-center text-sm text-slate-500">
             No merchants yet. Onboard your first merchant to get started.

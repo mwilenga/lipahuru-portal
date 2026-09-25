@@ -14,10 +14,15 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(
+export type ApiSuccess<T> = {
+  data: T;
+  message: string;
+};
+
+export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
-): Promise<T> {
+): Promise<ApiSuccess<T>> {
   const token = getToken();
   const headers = new Headers(options.headers);
 
@@ -79,5 +84,16 @@ export async function apiFetch<T>(
     );
   }
 
-  return payload.data;
+  return {
+    data: payload.data,
+    message: payload.message?.trim() || "Done",
+  };
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const { data } = await apiRequest<T>(path, options);
+  return data;
 }

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { CredentialsPanel } from "@/components/merchants/CredentialsPanel";
 import { PanelTabHeader, PanelTabs } from "@/components/ui/PanelTabs";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
 import { Button, Input } from "@/components/ui/primitives";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiRequest } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import {
   COMMISSION_TYPE_OPTIONS,
   ENVIRONMENT_OPTIONS,
@@ -128,7 +130,7 @@ export function MerchantSlidePanel({
     setSaving(true);
     setError("");
     try {
-      await apiFetch(`/admin/v1/merchants/${merchantId}`, {
+      const { message } = await apiRequest(`/admin/v1/merchants/${merchantId}`, {
         method: "PUT",
         body: JSON.stringify({
           name: form.name,
@@ -138,10 +140,14 @@ export function MerchantSlidePanel({
           environment: form.environment,
         }),
       });
+      toast.success(message);
       onSaved();
       await load(merchantId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save merchant");
+      const message =
+        err instanceof Error ? err.message : "Failed to save merchant";
+      setError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -152,16 +158,19 @@ export function MerchantSlidePanel({
     setSaving(true);
     setError("");
     try {
-      const data = await apiFetch<{ commissions: MerchantCommission[] }>(
-        `/admin/v1/merchants/${merchantId}/commissions`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ commissions }),
-        },
-      );
+      const { data, message } = await apiRequest<{
+        commissions: MerchantCommission[];
+      }>(`/admin/v1/merchants/${merchantId}/commissions`, {
+        method: "PUT",
+        body: JSON.stringify({ commissions }),
+      });
       setCommissions(data.commissions);
+      toast.success(message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save commissions");
+      const message =
+        err instanceof Error ? err.message : "Failed to save commissions";
+      setError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -179,14 +188,9 @@ export function MerchantSlidePanel({
   const title = merchant?.name ?? "Merchant";
 
   return (
-    <SlidePanel
-      open={open}
-      title={title}
-      onClose={onClose}
-      panelClassName="w-full max-w-none md:w-1/2"
-    >
+    <SlidePanel open={open} title={title} onClose={onClose} size="half">
       {loading ? (
-        <p className="text-sm text-slate-400">Loading merchant...</p>
+        <PageLoader label="Loading merchant…" />
       ) : (
         <div className="space-y-4">
           <PanelTabHeader subtitle={merchant?.email}>

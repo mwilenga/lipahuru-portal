@@ -56,7 +56,9 @@ export function SlidePanel({
         aria-modal="true"
         className={clsx(
           "relative flex h-full w-full flex-col border-l border-[var(--card-border)] bg-[var(--card)] shadow-2xl",
-          size === "half" ? "sm:w-1/2 sm:max-w-none" : "sm:max-w-md",
+          size === "half"
+            ? "sm:w-1/2 sm:max-w-none"
+            : "sm:w-full sm:max-w-md",
           panelClassName,
         )}
         role="dialog"
