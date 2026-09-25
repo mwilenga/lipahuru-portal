@@ -201,8 +201,8 @@ export default function AdminFloatTopupsPage() {
         title="Float Topups"
         subtitle="Approve merchant float requests or credit disbursement wallets directly"
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <FilterCard className="flex-1">
+        <div className="space-y-4">
+          <FilterCard>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <FilterField label="Status">
                 <StaticSearchableSelect
@@ -222,20 +222,23 @@ export default function AdminFloatTopupsPage() {
               </FilterField>
             </div>
           </FilterCard>
-          <Button type="button" onClick={() => setDirectOpen(true)}>
-            Direct topup
-          </Button>
-        </div>
 
-        {actionError ? (
-          <p className="mb-3 text-sm text-rose-300">{actionError}</p>
-        ) : null}
+          {actionError ? (
+            <p className="text-sm text-rose-300">{actionError}</p>
+          ) : null}
 
-        <Card>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-white">Topup requests</h2>
-            {loading ? <span className="text-xs text-slate-500">Loading…</span> : null}
-          </div>
+          <Card>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-medium text-white">Topup requests</h2>
+                {loading ? (
+                  <span className="text-xs text-slate-500">Loading…</span>
+                ) : null}
+              </div>
+              <Button type="button" onClick={() => setDirectOpen(true)}>
+                Direct topup
+              </Button>
+            </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -328,6 +331,7 @@ export default function AdminFloatTopupsPage() {
 
           <PaginationBar pagination={pagination} onPageChange={setPage} />
         </Card>
+        </div>
 
         <SlidePanel
           open={directOpen}
