@@ -26,7 +26,7 @@ export default function LoginPage() {
         token: string;
         role: UserRole;
         user: AuthUser;
-      }>("/v1/portal/login", {
+      }>("/v1/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
