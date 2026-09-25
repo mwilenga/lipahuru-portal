@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import { Badge, Card } from "@/components/ui/primitives";
+import { Badge, Button, Card } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, providerColor } from "@/lib/format";
 import type { Wallet } from "@/types/api";
 
 export default function MerchantWalletsPage() {
@@ -15,20 +16,29 @@ export default function MerchantWalletsPage() {
     apiFetch<Wallet[]>("/v1/portal/wallets").then(setWallets);
   }, []);
 
-  const balance =
-    wallets.find((w) => w.walletType === "MERCHANT_BALANCE") ?? wallets[0];
+  const parent = wallets.find((w) => w.walletType === "MERCHANT_PARENT");
+  const providerTotals = wallets.filter((w) => w.walletType === "PROVIDER_TOTAL");
+  const leaves = wallets.filter((w) =>
+    ["COLLECTION_LEAF", "DISBURSEMENT_LEAF"].includes(w.walletType),
+  );
 
   return (
     <AuthGuard role="merchant">
       <AppShell
         role="merchant"
-        title="My balance"
-        subtitle="Single wallet for collections and disbursements across all channels"
+        title="My wallets"
+        subtitle="Live balances across all providers and child wallets"
       >
-        {balance ? (
-          <Card>
+        <div className="mb-4 flex justify-end">
+          <Link href="/merchant/float-topups">
+            <Button type="button">Request float topup</Button>
+          </Link>
+        </div>
+
+        {parent ? (
+          <Card className="mb-6">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-400">{balance.name}</div>
+              <div className="text-sm text-slate-400">Parent wallet</div>
               <Badge className="border-emerald-500/30 bg-emerald-500/15 text-emerald-300">
                 ACTIVE
               </Badge>
@@ -37,22 +47,57 @@ export default function MerchantWalletsPage() {
               Total balance
             </div>
             <div className="mt-1 text-4xl font-semibold text-white">
-              {formatMoney(balance.total, balance.currency)}
+              {formatMoney(parent.total, parent.currency)}
             </div>
             <div className="mt-2 text-sm text-slate-400">
-              Available {formatMoney(balance.available, balance.currency)} · Reserved{" "}
-              {formatMoney(balance.reserved, balance.currency)}
+              Available {formatMoney(parent.available, parent.currency)} · Reserved{" "}
+              {formatMoney(parent.reserved, parent.currency)}
             </div>
-            <p className="mt-4 text-sm text-slate-500">
-              Providers are payment channels only. Collections credit this balance;
-              disbursements reserve and debit from the same pool.
-            </p>
           </Card>
-        ) : (
-          <Card>
-            <p className="text-sm text-slate-500">No balance wallet found.</p>
-          </Card>
-        )}
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {providerTotals.map((wallet) => {
+            const collection = leaves.find(
+              (leaf) =>
+                leaf.providerCode === wallet.providerCode &&
+                leaf.walletType === "COLLECTION_LEAF",
+            );
+            const disbursement = leaves.find(
+              (leaf) =>
+                leaf.providerCode === wallet.providerCode &&
+                leaf.walletType === "DISBURSEMENT_LEAF",
+            );
+
+            return (
+              <Card key={wallet.walletId}>
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-medium text-white">{wallet.name}</div>
+                  <Badge className={providerColor(wallet.providerCode)}>
+                    {wallet.providerCode}
+                  </Badge>
+                </div>
+                <div className="mt-4 text-2xl font-semibold text-white">
+                  {formatMoney(wallet.total, wallet.currency)}
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-emerald-500/10 p-3">
+                    <div className="text-xs text-emerald-300">Collection</div>
+                    <div className="mt-1 font-medium text-white">
+                      {formatMoney(collection?.total ?? "0", wallet.currency)}
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-blue-500/10 p-3">
+                    <div className="text-xs text-blue-300">Disbursement</div>
+                    <div className="mt-1 font-medium text-white">
+                      {formatMoney(disbursement?.total ?? "0", wallet.currency)}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       </AppShell>
     </AuthGuard>
   );
