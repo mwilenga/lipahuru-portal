@@ -299,6 +299,7 @@ export default function AdminFloatTopupsPage() {
         <SlidePanel
           open={directOpen}
           title="Direct float topup"
+          size="half"
           onClose={() => setDirectOpen(false)}
         >
           <form onSubmit={submitDirectTopup} className="space-y-4">

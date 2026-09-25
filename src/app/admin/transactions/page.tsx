@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Filter } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
-import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { FilterField } from "@/components/ui/FilterCard";
 import { DateInput } from "@/components/ui/DateInput";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
-import { Card, Input } from "@/components/ui/primitives";
+import { Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import { fetchAllFilteredTransactions } from "@/lib/fetch-all-transactions";
 import { defaultWeekDateRange, formatMoney } from "@/lib/format";
@@ -33,6 +35,7 @@ export default function AdminTransactionsPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [merchantId, setMerchantId] = useState("");
   const [reference, setReference] = useState("");
@@ -55,6 +58,31 @@ export default function AdminTransactionsPage() {
     ],
     [merchants],
   );
+
+  const activeFilterCount = useMemo(() => {
+    let count = [
+      merchantId,
+      reference,
+      receipt,
+      msisdn,
+      providerCode,
+      status,
+      operation,
+    ].filter(Boolean).length;
+    if (from !== defaultDates.from) count += 1;
+    if (to !== defaultDates.to) count += 1;
+    return count;
+  }, [
+    merchantId,
+    reference,
+    receipt,
+    msisdn,
+    providerCode,
+    status,
+    operation,
+    from,
+    to,
+  ]);
 
   useEffect(() => {
     apiFetch<{ merchants: Merchant[] }>("/admin/v1/merchants?perPage=100").then(
@@ -115,6 +143,18 @@ export default function AdminTransactionsPage() {
     page,
   ]);
 
+  function clearFilters() {
+    setMerchantId("");
+    setReference("");
+    setReceipt("");
+    setMsisdn("");
+    setProviderCode("");
+    setStatus("");
+    setOperation("");
+    setFrom(defaultDates.from);
+    setTo(defaultDates.to);
+  }
+
   return (
     <AuthGuard role="admin">
       <AppShell
@@ -123,8 +163,75 @@ export default function AdminTransactionsPage() {
         subtitle="All merchant collections and disbursements"
       >
         <div className="space-y-4">
-          <FilterCard>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Card className="min-w-0 flex-1 !p-4 sm:!p-5">
+              <div className="text-xs uppercase tracking-wide text-slate-500">
+                Total amount (filtered)
+              </div>
+              <div className="mt-2 text-3xl font-semibold text-white">
+                {summary
+                  ? formatMoney(summary.totalAmount, summary.currency)
+                  : "—"}
+              </div>
+              <div className="mt-1 text-sm text-slate-400">
+                {summary ? `${summary.count} transaction(s)` : "Loading..."}
+              </div>
+            </Card>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setFiltersOpen(true)}
+              className="gap-2 self-start"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 ? (
+                <span className="rounded-full bg-teal-500/20 px-1.5 py-0.5 text-xs text-teal-200">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="text-slate-400">Loading transactions...</div>
+          ) : (
+            <div>
+              <TransactionTable
+                transactions={transactions}
+                showMerchant
+                title="Transactions"
+                exportFilename="admin-transactions"
+                loadExportRows={async () => {
+                  const params = new URLSearchParams();
+                  if (merchantId) params.set("merchantId", merchantId);
+                  if (reference) params.set("reference", reference);
+                  if (receipt) params.set("providerReceiptNo", receipt);
+                  if (msisdn) params.set("msisdn", msisdn);
+                  if (providerCode) params.set("providerCode", providerCode);
+                  if (status) params.set("status", status);
+                  if (operation) params.set("operation", operation);
+                  if (from) params.set("from", from);
+                  if (to) params.set("to", to);
+                  return fetchAllFilteredTransactions(
+                    "/admin/v1/transactions",
+                    params,
+                  );
+                }}
+              />
+              <PaginationBar pagination={pagination} onPageChange={setPage} />
+            </div>
+          )}
+        </div>
+
+        <SlidePanel
+          open={filtersOpen}
+          title="Filters"
+          size="half"
+          onClose={() => setFiltersOpen(false)}
+        >
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FilterField label="Merchant">
                 <StaticSearchableSelect
                   value={merchantId}
@@ -162,76 +269,48 @@ export default function AdminTransactionsPage() {
                   placeholder="All providers"
                 />
               </FilterField>
-              <div className="col-span-full grid gap-3 md:grid-cols-2">
-                <FilterField label="Status">
-                  <StaticSearchableSelect
-                    value={status}
-                    onChange={setStatus}
-                    options={STATUS_FILTER_OPTIONS}
-                    placeholder="All statuses"
-                  />
-                </FilterField>
-                <FilterField label="Operation">
-                  <StaticSearchableSelect
-                    value={operation}
-                    onChange={setOperation}
-                    options={OPERATION_FILTER_OPTIONS}
-                    placeholder="All operations"
-                  />
-                </FilterField>
-              </div>
-              <div className="col-span-full grid gap-3 md:grid-cols-2">
-                <FilterField label="From">
-                  <DateInput value={from} onChange={setFrom} />
-                </FilterField>
-                <FilterField label="To">
-                  <DateInput value={to} onChange={setTo} />
-                </FilterField>
-              </div>
+              <FilterField label="Status">
+                <StaticSearchableSelect
+                  value={status}
+                  onChange={setStatus}
+                  options={STATUS_FILTER_OPTIONS}
+                  placeholder="All statuses"
+                />
+              </FilterField>
+              <FilterField label="Operation">
+                <StaticSearchableSelect
+                  value={operation}
+                  onChange={setOperation}
+                  options={OPERATION_FILTER_OPTIONS}
+                  placeholder="All operations"
+                />
+              </FilterField>
+              <FilterField label="From">
+                <DateInput value={from} onChange={setFrom} />
+              </FilterField>
+              <FilterField label="To">
+                <DateInput value={to} onChange={setTo} />
+              </FilterField>
             </div>
-          </FilterCard>
-
-          <Card>
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              Total amount (filtered)
+            <div className="flex gap-2 border-t border-[var(--card-border)] pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={clearFilters}
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={() => setFiltersOpen(false)}
+              >
+                Done
+              </Button>
             </div>
-            <div className="mt-2 text-3xl font-semibold text-white">
-              {summary
-                ? formatMoney(summary.totalAmount, summary.currency)
-                : "—"}
-            </div>
-            <div className="mt-1 text-sm text-slate-400">
-              {summary ? `${summary.count} transaction(s)` : "Loading..."}
-            </div>
-          </Card>
-
-          {loading ? (
-            <div className="text-slate-400">Loading transactions...</div>
-          ) : (
-            <div>
-              <TransactionTable
-                transactions={transactions}
-                showMerchant
-                title="Transactions"
-                exportFilename="admin-transactions"
-                loadExportRows={async () => {
-                  const params = new URLSearchParams();
-                  if (merchantId) params.set("merchantId", merchantId);
-                  if (reference) params.set("reference", reference);
-                  if (receipt) params.set("providerReceiptNo", receipt);
-                  if (msisdn) params.set("msisdn", msisdn);
-                  if (providerCode) params.set("providerCode", providerCode);
-                  if (status) params.set("status", status);
-                  if (operation) params.set("operation", operation);
-                  if (from) params.set("from", from);
-                  if (to) params.set("to", to);
-                  return fetchAllFilteredTransactions("/admin/v1/transactions", params);
-                }}
-              />
-              <PaginationBar pagination={pagination} onPageChange={setPage} />
-            </div>
-          )}
-        </div>
+          </div>
+        </SlidePanel>
       </AppShell>
     </AuthGuard>
   );

@@ -5,7 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
+import { FilterField } from "@/components/ui/FilterCard";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { SlidePanel } from "@/components/ui/SlidePanel";
 import { Badge, Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch, ApiError } from "@/lib/api";
 import { formatMoney, providerColor, statusColor } from "@/lib/format";
@@ -18,6 +20,7 @@ export default function MerchantFloatTopupsPage() {
   const [topups, setTopups] = useState<FloatTopup[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
@@ -63,6 +66,13 @@ export default function MerchantFloatTopupsPage() {
     void loadTopups(page);
   }, [loadTopups, page]);
 
+  function resetForm() {
+    setAmounts({});
+    setReference("");
+    setNotes("");
+    setError(null);
+  }
+
   async function submitRequest(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -90,9 +100,8 @@ export default function MerchantFloatTopupsPage() {
           notes: notes.trim() || undefined,
         }),
       });
-      setAmounts({});
-      setReference("");
-      setNotes("");
+      resetForm();
+      setPanelOpen(false);
       setSuccess("Float topup request submitted. Waiting for admin approval.");
       setPage(1);
       await loadTopups(1);
@@ -110,82 +119,26 @@ export default function MerchantFloatTopupsPage() {
         title="Float Topups"
         subtitle="Request disbursement float per network for admin approval"
       >
-        <Card className="mb-6">
-          <form onSubmit={submitRequest} className="space-y-4">
-            <div>
-              <h2 className="text-lg font-medium text-white">New request</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Enter the amount to top up for each MNO disbursement wallet.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {networks.map((network) => (
-                <div
-                  key={network.providerCode}
-                  className="rounded-xl border border-[var(--card-border)] bg-slate-950/60 p-3"
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <Badge className={providerColor(network.providerCode)}>
-                      {network.providerCode}
-                    </Badge>
-                    <span className="text-xs text-slate-500">
-                      Available {formatMoney(network.available, network.currency)}
-                    </span>
-                  </div>
-                  <Input
-                    type="number"
-                    min="100"
-                    step="0.01"
-                    placeholder="Amount (min 100)"
-                    value={amounts[network.providerCode] ?? ""}
-                    onChange={(e) =>
-                      setAmounts((prev) => ({
-                        ...prev,
-                        [network.providerCode]: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-
-            {networks.length === 0 ? (
-              <p className="text-sm text-slate-500">No disbursement wallets found.</p>
-            ) : null}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-slate-500">Reference</span>
-                <Input
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  placeholder="Optional bank / transfer ref"
-                />
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-slate-500">Notes</span>
-                <Input
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Optional notes for admin"
-                />
-              </label>
-            </div>
-
-            {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-            {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
-
-            <Button type="submit" disabled={submitting || networks.length === 0}>
-              {submitting ? "Submitting…" : "Submit topup request"}
-            </Button>
-          </form>
-        </Card>
+        {success ? <p className="mb-4 text-sm text-emerald-300">{success}</p> : null}
 
         <Card>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-white">Request history</h2>
-            {loading ? <span className="text-xs text-slate-500">Loading…</span> : null}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-medium text-white">Request history</h2>
+              {loading ? (
+                <span className="text-xs text-slate-500">Loading…</span>
+              ) : null}
+            </div>
+            <Button
+              type="button"
+              onClick={() => {
+                setSuccess(null);
+                setError(null);
+                setPanelOpen(true);
+              }}
+            >
+              New topup request
+            </Button>
           </div>
 
           <div className="overflow-x-auto">
@@ -244,6 +197,85 @@ export default function MerchantFloatTopupsPage() {
             View wallets
           </Link>
         </div>
+
+        <SlidePanel
+          open={panelOpen}
+          title="New topup request"
+          size="half"
+          onClose={() => {
+            setPanelOpen(false);
+            setError(null);
+          }}
+        >
+          <form onSubmit={submitRequest} className="space-y-5">
+            <p className="text-sm text-slate-400">
+              Enter the amount to top up for each MNO disbursement wallet. Requests
+              wait for admin approval.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {networks.map((network) => (
+                <div
+                  key={network.providerCode}
+                  className="rounded-xl border border-[var(--card-border)] bg-slate-950/60 p-3"
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <Badge className={providerColor(network.providerCode)}>
+                      {network.providerCode}
+                    </Badge>
+                    <span className="text-xs text-slate-500">
+                      Available {formatMoney(network.available, network.currency)}
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    min="100"
+                    step="0.01"
+                    placeholder="Amount (min 100)"
+                    value={amounts[network.providerCode] ?? ""}
+                    onChange={(e) =>
+                      setAmounts((prev) => ({
+                        ...prev,
+                        [network.providerCode]: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+
+            {networks.length === 0 ? (
+              <p className="text-sm text-slate-500">No disbursement wallets found.</p>
+            ) : null}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FilterField label="Reference">
+                <Input
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  placeholder="Optional bank / transfer ref"
+                />
+              </FilterField>
+              <FilterField label="Notes">
+                <Input
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Optional notes for admin"
+                />
+              </FilterField>
+            </div>
+
+            {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+
+            <Button
+              type="submit"
+              disabled={submitting || networks.length === 0}
+              className="w-full"
+            >
+              {submitting ? "Submitting…" : "Submit topup request"}
+            </Button>
+          </form>
+        </SlidePanel>
       </AppShell>
     </AuthGuard>
   );

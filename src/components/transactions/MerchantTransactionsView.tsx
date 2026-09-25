@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Filter } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
-import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { FilterField } from "@/components/ui/FilterCard";
 import { DateInput } from "@/components/ui/DateInput";
 import { PaginationBar } from "@/components/ui/PaginationBar";
+import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
-import { Card, Input } from "@/components/ui/primitives";
+import { Button, Card, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import { fetchAllFilteredTransactions } from "@/lib/fetch-all-transactions";
 import { defaultWeekDateRange, formatMoney } from "@/lib/format";
@@ -35,6 +37,7 @@ export function MerchantTransactionsView({
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [reference, setReference] = useState("");
   const [receipt, setReceipt] = useState("");
   const [msisdn, setMsisdn] = useState("");
@@ -42,6 +45,15 @@ export function MerchantTransactionsView({
   const [status, setStatus] = useState("");
   const [from, setFrom] = useState(defaultDates.from);
   const [to, setTo] = useState(defaultDates.to);
+
+  const activeFilterCount = useMemo(() => {
+    let count = [reference, receipt, msisdn, providerCode, status].filter(
+      Boolean,
+    ).length;
+    if (from !== defaultDates.from) count += 1;
+    if (to !== defaultDates.to) count += 1;
+    return count;
+  }, [reference, receipt, msisdn, providerCode, status, from, to]);
 
   useEffect(() => {
     setPage(1);
@@ -74,70 +86,46 @@ export function MerchantTransactionsView({
       .finally(() => setLoading(false));
   }, [operation, reference, receipt, msisdn, status, providerCode, from, to, page]);
 
+  function clearFilters() {
+    setReference("");
+    setReceipt("");
+    setMsisdn("");
+    setProviderCode("");
+    setStatus("");
+    setFrom(defaultDates.from);
+    setTo(defaultDates.to);
+  }
+
   return (
     <AppShell role="merchant" title={title} subtitle={subtitle}>
       <div className="space-y-4">
-        <FilterCard>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <FilterField label="Reference">
-              <Input
-                placeholder="ref / requestId"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-              />
-            </FilterField>
-            <FilterField label="Receipt">
-              <Input
-                placeholder="MNO receipt no."
-                value={receipt}
-                onChange={(e) => setReceipt(e.target.value)}
-              />
-            </FilterField>
-            <FilterField label="MSISDN">
-              <Input
-                placeholder="2557..."
-                value={msisdn}
-                onChange={(e) => setMsisdn(e.target.value)}
-              />
-            </FilterField>
-            <FilterField label="Provider">
-              <StaticSearchableSelect
-                value={providerCode}
-                onChange={setProviderCode}
-                options={PROVIDER_FILTER_OPTIONS}
-                placeholder="All providers"
-              />
-            </FilterField>
-            <div className="col-span-full grid gap-3 md:grid-cols-2">
-              <FilterField label="From">
-                <DateInput value={from} onChange={setFrom} />
-              </FilterField>
-              <FilterField label="To">
-                <DateInput value={to} onChange={setTo} />
-              </FilterField>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Card className="min-w-0 flex-1 !p-4 sm:!p-5">
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              Total amount (filtered)
             </div>
-            <FilterField label="Status">
-              <StaticSearchableSelect
-                value={status}
-                onChange={setStatus}
-                options={STATUS_FILTER_OPTIONS}
-                placeholder="All statuses"
-              />
-            </FilterField>
-          </div>
-        </FilterCard>
-
-        <Card>
-          <div className="text-xs uppercase tracking-wide text-slate-500">
-            Total amount (filtered)
-          </div>
-          <div className="mt-2 text-3xl font-semibold text-white">
-            {summary ? formatMoney(summary.totalAmount, summary.currency) : "—"}
-          </div>
-          <div className="mt-1 text-sm text-slate-400">
-            {summary ? `${summary.count} transaction(s)` : "Loading..."}
-          </div>
-        </Card>
+            <div className="mt-2 text-3xl font-semibold text-white">
+              {summary ? formatMoney(summary.totalAmount, summary.currency) : "—"}
+            </div>
+            <div className="mt-1 text-sm text-slate-400">
+              {summary ? `${summary.count} transaction(s)` : "Loading..."}
+            </div>
+          </Card>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setFiltersOpen(true)}
+            className="gap-2 self-start"
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+            {activeFilterCount > 0 ? (
+              <span className="rounded-full bg-teal-500/20 px-1.5 py-0.5 text-xs text-teal-200">
+                {activeFilterCount}
+              </span>
+            ) : null}
+          </Button>
+        </div>
 
         {loading ? (
           <div className="text-slate-400">Loading transactions...</div>
@@ -170,6 +158,78 @@ export function MerchantTransactionsView({
           </div>
         )}
       </div>
+
+      <SlidePanel
+        open={filtersOpen}
+        title="Filters"
+        size="half"
+        onClose={() => setFiltersOpen(false)}
+      >
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FilterField label="Reference">
+              <Input
+                placeholder="ref / requestId"
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+              />
+            </FilterField>
+            <FilterField label="Receipt">
+              <Input
+                placeholder="MNO receipt no."
+                value={receipt}
+                onChange={(e) => setReceipt(e.target.value)}
+              />
+            </FilterField>
+            <FilterField label="MSISDN">
+              <Input
+                placeholder="2557..."
+                value={msisdn}
+                onChange={(e) => setMsisdn(e.target.value)}
+              />
+            </FilterField>
+            <FilterField label="Provider">
+              <StaticSearchableSelect
+                value={providerCode}
+                onChange={setProviderCode}
+                options={PROVIDER_FILTER_OPTIONS}
+                placeholder="All providers"
+              />
+            </FilterField>
+            <FilterField label="From">
+              <DateInput value={from} onChange={setFrom} />
+            </FilterField>
+            <FilterField label="To">
+              <DateInput value={to} onChange={setTo} />
+            </FilterField>
+            <FilterField label="Status">
+              <StaticSearchableSelect
+                value={status}
+                onChange={setStatus}
+                options={STATUS_FILTER_OPTIONS}
+                placeholder="All statuses"
+              />
+            </FilterField>
+          </div>
+          <div className="flex gap-2 border-t border-[var(--card-border)] pt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={clearFilters}
+            >
+              Clear
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </SlidePanel>
     </AppShell>
   );
 }

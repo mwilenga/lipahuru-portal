@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Filter } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { WalletTransferExportMenu } from "@/components/transfers/WalletTransferExportMenu";
 import { DateInput } from "@/components/ui/DateInput";
 import { DateTimeCell } from "@/components/ui/DateTimeCell";
-import { FilterCard, FilterField } from "@/components/ui/FilterCard";
+import { FilterField } from "@/components/ui/FilterCard";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
@@ -39,6 +40,7 @@ export default function MerchantTransfersPage() {
   const [to, setTo] = useState("");
 
   const [panelOpen, setPanelOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [fromWalletId, setFromWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
   const [amount, setAmount] = useState("");
@@ -47,6 +49,8 @@ export default function MerchantTransfersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const activeFilterCount = [search, status, from, to].filter(Boolean).length;
 
   const selectedFromWallet = useMemo(
     () => wallets.find((wallet) => String(wallet.walletId) === fromWalletId),
@@ -181,32 +185,6 @@ export default function MerchantTransfersPage() {
         subtitle="Move funds between your collection and disbursement wallets"
       >
         <div className="space-y-4">
-          <FilterCard>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <FilterField label="Search">
-                <Input
-                  placeholder="Transfer ID / reference"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </FilterField>
-              <FilterField label="Status">
-                <StaticSearchableSelect
-                  value={status}
-                  onChange={setStatus}
-                  options={WALLET_TRANSFER_STATUS_OPTIONS}
-                  placeholder="All statuses"
-                />
-              </FilterField>
-              <FilterField label="From">
-                <DateInput value={from} onChange={setFrom} />
-              </FilterField>
-              <FilterField label="To">
-                <DateInput value={to} onChange={setTo} />
-              </FilterField>
-            </div>
-          </FilterCard>
-
           {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
 
           <Card>
@@ -217,7 +195,21 @@ export default function MerchantTransfersPage() {
                   <span className="text-xs text-slate-500">Loading…</span>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setFiltersOpen(true)}
+                  className="gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filters
+                  {activeFilterCount > 0 ? (
+                    <span className="rounded-full bg-teal-500/20 px-1.5 py-0.5 text-xs text-teal-200">
+                      {activeFilterCount}
+                    </span>
+                  ) : null}
+                </Button>
                 <WalletTransferExportMenu
                   title="Wallet transfers"
                   filename="wallet-transfers"
@@ -297,8 +289,61 @@ export default function MerchantTransfersPage() {
         </div>
 
         <SlidePanel
+          open={filtersOpen}
+          title="Filters"
+          onClose={() => setFiltersOpen(false)}
+        >
+          <div className="space-y-4">
+            <FilterField label="Search">
+              <Input
+                placeholder="Transfer ID / reference"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </FilterField>
+            <FilterField label="Status">
+              <StaticSearchableSelect
+                value={status}
+                onChange={setStatus}
+                options={WALLET_TRANSFER_STATUS_OPTIONS}
+                placeholder="All statuses"
+              />
+            </FilterField>
+            <FilterField label="From">
+              <DateInput value={from} onChange={setFrom} />
+            </FilterField>
+            <FilterField label="To">
+              <DateInput value={to} onChange={setTo} />
+            </FilterField>
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  setSearch("");
+                  setStatus("");
+                  setFrom("");
+                  setTo("");
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={() => setFiltersOpen(false)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </SlidePanel>
+
+        <SlidePanel
           open={panelOpen}
           title="New transfer"
+          size="half"
           onClose={() => setPanelOpen(false)}
         >
           <form onSubmit={submitTransfer} className="space-y-4">

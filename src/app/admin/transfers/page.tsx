@@ -410,6 +410,7 @@ export default function AdminTransfersPage() {
         <SlidePanel
           open={panelOpen}
           title="Instant transfer"
+          size="half"
           onClose={() => setPanelOpen(false)}
         >
           <form onSubmit={submitInstantTransfer} className="space-y-4">
