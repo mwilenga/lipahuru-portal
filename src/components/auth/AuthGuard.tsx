@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { getRole, homeForRole } from "@/lib/auth";
+
+function redirectTo(path: string) {
+  window.location.replace(path);
+}
 
 export function AuthGuard({
   role,
@@ -12,27 +15,50 @@ export function AuthGuard({
   role: "admin" | "merchant";
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const currentRole = getRole();
+    let cancelled = false;
 
-    if (!currentRole) {
-      const next = `${window.location.pathname}${window.location.search}`;
-      // Hard navigation so SMS deep-links always reach login instead of
-      // hanging on the preparing state when the router soft-replace stalls.
-      window.location.replace(`/login?next=${encodeURIComponent(next)}`);
-      return;
+    function resolveAuth() {
+      if (cancelled) return;
+
+      try {
+        const currentRole = getRole();
+
+        if (!currentRole) {
+          const next = `${window.location.pathname}${window.location.search}`;
+          redirectTo(`/login?next=${encodeURIComponent(next)}`);
+          return;
+        }
+
+        if (currentRole !== role) {
+          redirectTo(homeForRole(currentRole));
+          return;
+        }
+
+        setReady(true);
+      } catch {
+        redirectTo("/login");
+      }
     }
 
-    if (currentRole !== role) {
-      router.replace(homeForRole(currentRole));
-      return;
-    }
+    resolveAuth();
 
-    setReady(true);
-  }, [role, router]);
+    // Failsafe: never leave the user on Preparing portal indefinitely.
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      if (!getRole()) {
+        const next = `${window.location.pathname}${window.location.search}`;
+        redirectTo(`/login?next=${encodeURIComponent(next)}`);
+      }
+    }, 1500);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [role]);
 
   if (!ready) {
     return (
