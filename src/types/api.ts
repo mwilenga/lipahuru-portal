@@ -27,6 +27,10 @@ export interface Merchant {
   environment: string;
   defaultCurrency: string;
   defaultCallbackUrl?: string;
+  settlementBankName?: string | null;
+  settlementAccountName?: string | null;
+  settlementAccountNumber?: string | null;
+  settlementBankBranch?: string | null;
   createdAt?: string;
 }
 
@@ -108,6 +112,58 @@ export interface TransactionSummary {
   totalAmount: string;
   currency: string;
   count: number;
+}
+
+export interface SettlementWallet {
+  walletId: number;
+  name: string;
+  providerCode?: string;
+  currency: string;
+  available: string;
+  commissionOutstanding: string;
+  settleable: string;
+}
+
+export interface SettlementBankAccount {
+  bankName: string;
+  accountName?: string | null;
+  accountNumber: string;
+  branch?: string | null;
+}
+
+export interface SettlementWalletsResponse {
+  wallets: SettlementWallet[];
+  commission: { type: "FIXED" | "PERCENT" | null; value: string };
+  bankAccount: SettlementBankAccount | null;
+}
+
+export interface SettlementRequest {
+  id: number;
+  requestId: string;
+  merchantId: number;
+  merchantName?: string;
+  wallet?: {
+    walletId: number;
+    name: string;
+    providerCode?: string;
+    currency?: string;
+  } | null;
+  amount: string;
+  commissionAmount: string;
+  totalDebit: string;
+  currency: string;
+  status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
+  memo?: string | null;
+  rejectionReason?: string | null;
+  bankName?: string | null;
+  bankAccountName?: string | null;
+  bankAccountNumber?: string | null;
+  bankBranch?: string | null;
+  requestedBy?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MerchantCommission {

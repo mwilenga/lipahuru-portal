@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   CircleDollarSign,
   CreditCard,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -29,6 +30,7 @@ const adminNav = [
   { href: "/admin/merchants", label: "Merchants", icon: Store },
   { href: "/admin/float-topups", label: "Float Topups", icon: CircleDollarSign },
   { href: "/admin/transfers", label: "Transfers", icon: Repeat },
+  { href: "/admin/settlements", label: "Settlements", icon: Landmark },
   { href: "/admin/transactions", label: "Transactions", icon: CreditCard },
 ];
 
@@ -37,6 +39,7 @@ const merchantNav = [
   { href: "/merchant/wallets", label: "My Wallets", icon: Wallet },
   { href: "/merchant/float-topups", label: "Float Topups", icon: CircleDollarSign },
   { href: "/merchant/transfers", label: "Transfers", icon: Repeat },
+  { href: "/merchant/settlements", label: "Settlements", icon: Landmark },
   { href: "/merchant/collections", label: "Collections", icon: ArrowDownLeft },
   { href: "/merchant/disbursements", label: "Disbursements", icon: ArrowUpRight },
 ];
