@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Filter } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { TransactionSummaryCards } from "@/components/transactions/TransactionSummaryCards";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
 import { FilterField } from "@/components/ui/FilterCard";
 import { DateInput } from "@/components/ui/DateInput";
@@ -11,10 +12,10 @@ import { PaginationBar } from "@/components/ui/PaginationBar";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
-import { Button, Card, Input } from "@/components/ui/primitives";
+import { Button, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import { fetchAllFilteredTransactions } from "@/lib/fetch-all-transactions";
-import { defaultWeekDateRange, formatMoney } from "@/lib/format";
+import { defaultWeekDateRange } from "@/lib/format";
 import {
   OPERATION_FILTER_OPTIONS,
   PROVIDER_FILTER_OPTIONS,
@@ -164,19 +165,7 @@ export default function AdminTransactionsPage() {
         subtitle="All merchant collections and disbursements"
       >
         <div className="space-y-4">
-          <Card className="w-full !p-4 md:w-1/3 md:max-w-sm">
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              Total amount (filtered)
-            </div>
-            <div className="mt-1.5 text-2xl font-semibold text-white">
-              {summary
-                ? formatMoney(summary.totalAmount, summary.currency)
-                : "—"}
-            </div>
-            <div className="mt-1 text-sm text-slate-400">
-              {summary ? `${summary.count} transaction(s)` : "—"}
-            </div>
-          </Card>
+          <TransactionSummaryCards summary={summary} operation={operation} />
 
           {loading ? (
             <PageLoader label="Loading transactions…" />

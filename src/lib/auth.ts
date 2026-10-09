@@ -6,6 +6,16 @@ const USER_KEY = "lipahuru_user";
 const NEXT_PATH_KEY = "lipahuru_next_path";
 const APPROVE_TOPUP_KEY = "lipahuru_approve_topup";
 const APPROVE_TRANSFER_KEY = "lipahuru_approve_transfer";
+const APPROVE_SETTLEMENT_KEY = "lipahuru_approve_settlement";
+
+type ApproveKind = "topup" | "transfer" | "settlement";
+
+function approveKindForPath(path: string): ApproveKind | null {
+  if (path.includes("float-topups")) return "topup";
+  if (path.includes("transfers")) return "transfer";
+  if (path.includes("settlements")) return "settlement";
+  return null;
+}
 
 export function saveSession(token: string, role: UserRole, user: AuthUser): void {
   if (typeof window === "undefined") return;
@@ -66,12 +76,9 @@ function stashApproveFromPath(pathWithQuery: string): void {
   try {
     const url = new URL(pathWithQuery, "https://lipahuru.invalid");
     const approve = url.searchParams.get("approve");
-    if (!approve) return;
-    if (url.pathname.includes("float-topups")) {
-      sessionStorage.setItem(APPROVE_TOPUP_KEY, approve);
-    } else if (url.pathname.includes("transfers")) {
-      sessionStorage.setItem(APPROVE_TRANSFER_KEY, approve);
-    }
+    const kind = approveKindForPath(url.pathname);
+    if (!approve || !kind) return;
+    sessionStorage.setItem(approveStorageKey(kind), approve);
   } catch {
     // ignore malformed next paths
   }
@@ -113,12 +120,8 @@ export function rememberLoginDeepLink(): void {
 
   const next =
     fromQuery ?? sessionStorage.getItem(NEXT_PATH_KEY) ?? "";
-  const path = decodeNextCandidate(next).split("?")[0] || "";
-  if (path.includes("float-topups")) {
-    sessionStorage.setItem(APPROVE_TOPUP_KEY, approve);
-  } else if (path.includes("transfers")) {
-    sessionStorage.setItem(APPROVE_TRANSFER_KEY, approve);
-  }
+  const kind = approveKindForPath(decodeNextCandidate(next).split("?")[0] || "");
+  if (kind) sessionStorage.setItem(approveStorageKey(kind), approve);
 }
 
 /** Persist ?next= and return a role-safe destination (clears store when used). */
@@ -136,14 +139,14 @@ export function consumeNextPath(role: UserRole): string | null {
   return safe;
 }
 
-function approveStorageKey(kind: "topup" | "transfer"): string {
-  return kind === "topup" ? APPROVE_TOPUP_KEY : APPROVE_TRANSFER_KEY;
+function approveStorageKey(kind: ApproveKind): string {
+  if (kind === "topup") return APPROVE_TOPUP_KEY;
+  if (kind === "transfer") return APPROVE_TRANSFER_KEY;
+  return APPROVE_SETTLEMENT_KEY;
 }
 
 /** Read approve id from URL or session; keep it until clearApproveIntent(). */
-export function captureApproveIntent(
-  kind: "topup" | "transfer",
-): string | null {
+export function captureApproveIntent(kind: ApproveKind): string | null {
   if (typeof window === "undefined") return null;
   const key = approveStorageKey(kind);
   const fromQuery = new URLSearchParams(window.location.search).get("approve");
@@ -154,7 +157,7 @@ export function captureApproveIntent(
   return sessionStorage.getItem(key);
 }
 
-export function clearApproveIntent(kind: "topup" | "transfer"): void {
+export function clearApproveIntent(kind: ApproveKind): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(approveStorageKey(kind));
 }

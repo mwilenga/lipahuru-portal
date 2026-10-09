@@ -45,3 +45,11 @@ export const WALLET_TRANSFER_STATUS_OPTIONS: StaticSearchableSelectOption[] = [
   { value: "APPROVED", label: "APPROVED" },
   { value: "REJECTED", label: "REJECTED" },
 ];
+
+export const SETTLEMENT_STATUS_OPTIONS: StaticSearchableSelectOption[] = [
+  { value: "", label: "All statuses" },
+  { value: "PENDING_APPROVAL", label: "PENDING_APPROVAL" },
+  { value: "APPROVED", label: "APPROVED" },
+  { value: "REJECTED", label: "REJECTED" },
+  { value: "CANCELLED", label: "CANCELLED" },
+];

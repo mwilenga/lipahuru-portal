@@ -48,6 +48,10 @@ export function MerchantSlidePanel({
     phone: "",
     defaultCallbackUrl: "",
     environment: "uat",
+    settlementBankName: "",
+    settlementAccountName: "",
+    settlementAccountNumber: "",
+    settlementBankBranch: "",
   });
 
   const load = useCallback(async (id: number) => {
@@ -90,6 +94,10 @@ export function MerchantSlidePanel({
         phone: merchantData.phone ?? "",
         defaultCallbackUrl: merchantData.defaultCallbackUrl ?? "",
         environment: merchantData.environment ?? "uat",
+        settlementBankName: merchantData.settlementBankName ?? "",
+        settlementAccountName: merchantData.settlementAccountName ?? "",
+        settlementAccountNumber: merchantData.settlementAccountNumber ?? "",
+        settlementBankBranch: merchantData.settlementBankBranch ?? "",
       });
 
       if (commissionsResult.status === "fulfilled") {
@@ -138,6 +146,10 @@ export function MerchantSlidePanel({
           phone: form.phone || null,
           default_callback_url: form.defaultCallbackUrl || null,
           environment: form.environment,
+          settlement_bank_name: form.settlementBankName.trim() || null,
+          settlement_account_name: form.settlementAccountName.trim() || null,
+          settlement_account_number: form.settlementAccountNumber.trim() || null,
+          settlement_bank_branch: form.settlementBankBranch.trim() || null,
         }),
       });
       toast.success(message);
@@ -250,6 +262,54 @@ export function MerchantSlidePanel({
                   options={ENVIRONMENT_OPTIONS}
                   placeholder="Select environment"
                 />
+              </div>
+              <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-slate-950 p-4">
+                <div>
+                  <div className="text-sm font-medium text-white">Settlement bank account</div>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Where this merchant&apos;s settlement requests are paid. Required
+                    before they can request a settlement.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs text-slate-500">Bank name</label>
+                    <Input
+                      value={form.settlementBankName}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, settlementBankName: e.target.value }))
+                      }
+                      placeholder="e.g. CRDB Bank"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-slate-500">Branch</label>
+                    <Input
+                      value={form.settlementBankBranch}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, settlementBankBranch: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-slate-500">Account name</label>
+                    <Input
+                      value={form.settlementAccountName}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, settlementAccountName: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-slate-500">Account number</label>
+                    <Input
+                      value={form.settlementAccountNumber}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, settlementAccountNumber: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
               </div>
               <div className="rounded-xl border border-[var(--card-border)] bg-slate-950 p-3 text-sm text-slate-400">
                 Status:{" "}
