@@ -112,6 +112,10 @@ export interface TransactionSummary {
   totalAmount: string;
   currency: string;
   count: number;
+  successCount?: number;
+  successAmount?: string;
+  feeAmount?: string;
+  netAmount?: string;
 }
 
 export interface SettlementWallet {

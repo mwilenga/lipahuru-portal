@@ -46,6 +46,7 @@ export function MerchantTransactionsView({
   const [status, setStatus] = useState("");
   const [from, setFrom] = useState(defaultDates.from);
   const [to, setTo] = useState(defaultDates.to);
+  const isDisbursement = operation === "B2C_DISBURSEMENT";
 
   const activeFilterCount = useMemo(() => {
     let count = [reference, receipt, msisdn, providerCode, status].filter(
@@ -100,17 +101,30 @@ export function MerchantTransactionsView({
   return (
     <AppShell role="merchant" title={title} subtitle={subtitle}>
       <div className="space-y-4">
-        <Card className="w-full !p-4 md:w-1/3 md:max-w-sm">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
-            Total amount (filtered)
-          </div>
-          <div className="mt-1.5 text-2xl font-semibold text-white">
-            {summary ? formatMoney(summary.totalAmount, summary.currency) : "—"}
-          </div>
-          <div className="mt-1 text-sm text-slate-400">
-            {summary ? `${summary.count} transaction(s)` : "—"}
-          </div>
-        </Card>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard
+            label={isDisbursement ? "Gross disbursed" : "Gross collected"}
+            value={summary ? formatMoney(summary.successAmount ?? "0", summary.currency) : "—"}
+            hint={summary ? `${summary.successCount ?? 0} successful transaction(s)` : "—"}
+          />
+          <SummaryCard
+            label="Transaction charges"
+            value={summary ? formatMoney(summary.feeAmount ?? "0", summary.currency) : "—"}
+            hint="On successful transactions"
+            valueClassName="text-amber-300"
+          />
+          <SummaryCard
+            label={isDisbursement ? "Net disbursed" : "Net collection"}
+            value={summary ? formatMoney(summary.netAmount ?? "0", summary.currency) : "—"}
+            hint="Gross minus charges"
+            valueClassName="text-teal-300"
+          />
+          <SummaryCard
+            label="Total amount (all statuses)"
+            value={summary ? formatMoney(summary.totalAmount, summary.currency) : "—"}
+            hint={summary ? `${summary.count} transaction(s)` : "—"}
+          />
+        </div>
 
         {loading ? (
           <PageLoader label="Loading transactions…" />
@@ -232,6 +246,26 @@ export function MerchantTransactionsView({
         </div>
       </SlidePanel>
     </AppShell>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  hint,
+  valueClassName = "text-white",
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  valueClassName?: string;
+}) {
+  return (
+    <Card className="!p-4">
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className={`mt-1.5 text-2xl font-semibold ${valueClassName}`}>{value}</div>
+      <div className="mt-1 text-sm text-slate-400">{hint}</div>
+    </Card>
   );
 }
 
