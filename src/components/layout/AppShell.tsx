@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PiggyBank,
   Repeat,
   Store,
   Wallet,
@@ -28,6 +29,7 @@ const HEADER_ROW = "flex h-[4.5rem] shrink-0 items-center overflow-hidden px-4 m
 const adminNav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
+  { href: "/admin/merchant-funds", label: "Merchant Funds", icon: PiggyBank },
   { href: "/admin/float-topups", label: "Float Topups", icon: CircleDollarSign },
   { href: "/admin/transfers", label: "Transfers", icon: Repeat },
   { href: "/admin/settlements", label: "Settlements", icon: Landmark },

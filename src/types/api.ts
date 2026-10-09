@@ -118,6 +118,32 @@ export interface TransactionSummary {
   netAmount?: string;
 }
 
+export interface MerchantFundsRow {
+  merchantId: number;
+  merchantName: string;
+  merchantEmail: string;
+  merchantStatus: string | null;
+  currency: string;
+  collectionCount: number;
+  collected: string;
+  charges: string;
+  settled: string;
+  pendingSettlement: string;
+  netRemaining: string;
+  walletBalance: string;
+}
+
+export interface MerchantFundsTotals {
+  collectionCount: number;
+  collected: string;
+  charges: string;
+  settled: string;
+  pendingSettlement: string;
+  netRemaining: string;
+  walletBalance: string;
+  currency: string;
+}
+
 export interface SettlementWallet {
   walletId: number;
   name: string;
