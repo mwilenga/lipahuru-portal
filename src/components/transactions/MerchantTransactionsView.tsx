@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Filter } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { TransactionSummaryCards } from "@/components/transactions/TransactionSummaryCards";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
 import { FilterField } from "@/components/ui/FilterCard";
 import { DateInput } from "@/components/ui/DateInput";
@@ -11,10 +12,10 @@ import { PaginationBar } from "@/components/ui/PaginationBar";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { SlidePanel } from "@/components/ui/SlidePanel";
 import { StaticSearchableSelect } from "@/components/ui/StaticSearchableSelect";
-import { Button, Card, Input } from "@/components/ui/primitives";
+import { Button, Input } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import { fetchAllFilteredTransactions } from "@/lib/fetch-all-transactions";
-import { defaultWeekDateRange, formatMoney } from "@/lib/format";
+import { defaultWeekDateRange } from "@/lib/format";
 import {
   PROVIDER_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
@@ -46,8 +47,6 @@ export function MerchantTransactionsView({
   const [status, setStatus] = useState("");
   const [from, setFrom] = useState(defaultDates.from);
   const [to, setTo] = useState(defaultDates.to);
-  const isDisbursement = operation === "B2C_DISBURSEMENT";
-
   const activeFilterCount = useMemo(() => {
     let count = [reference, receipt, msisdn, providerCode, status].filter(
       Boolean,
@@ -101,30 +100,7 @@ export function MerchantTransactionsView({
   return (
     <AppShell role="merchant" title={title} subtitle={subtitle}>
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard
-            label={isDisbursement ? "Gross disbursed" : "Gross collected"}
-            value={summary ? formatMoney(summary.successAmount ?? "0", summary.currency) : "—"}
-            hint={summary ? `${summary.successCount ?? 0} successful transaction(s)` : "—"}
-          />
-          <SummaryCard
-            label="Transaction charges"
-            value={summary ? formatMoney(summary.feeAmount ?? "0", summary.currency) : "—"}
-            hint="On successful transactions"
-            valueClassName="text-amber-300"
-          />
-          <SummaryCard
-            label={isDisbursement ? "Net disbursed" : "Net collection"}
-            value={summary ? formatMoney(summary.netAmount ?? "0", summary.currency) : "—"}
-            hint="Gross minus charges"
-            valueClassName="text-teal-300"
-          />
-          <SummaryCard
-            label="Total amount (all statuses)"
-            value={summary ? formatMoney(summary.totalAmount, summary.currency) : "—"}
-            hint={summary ? `${summary.count} transaction(s)` : "—"}
-          />
-        </div>
+        <TransactionSummaryCards summary={summary} operation={operation} />
 
         {loading ? (
           <PageLoader label="Loading transactions…" />
@@ -246,26 +222,6 @@ export function MerchantTransactionsView({
         </div>
       </SlidePanel>
     </AppShell>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  hint,
-  valueClassName = "text-white",
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  valueClassName?: string;
-}) {
-  return (
-    <Card className="!p-4">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-1.5 text-2xl font-semibold ${valueClassName}`}>{value}</div>
-      <div className="mt-1 text-sm text-slate-400">{hint}</div>
-    </Card>
   );
 }
 
