@@ -14,6 +14,7 @@ import {
   Menu,
   PiggyBank,
   Repeat,
+  Settings,
   Store,
   Wallet,
   X,
@@ -34,10 +35,12 @@ const adminNav = [
   { href: "/admin/transfers", label: "Transfers", icon: Repeat },
   { href: "/admin/settlements", label: "Settlements", icon: Landmark },
   { href: "/admin/transactions", label: "Transactions", icon: CreditCard },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 const merchantNav = [
-  { href: "/merchant", label: "Dashboard", icon: LayoutDashboard },
+  // Kept for possible re-enable; hidden from the sidebar for now.
+  { href: "/merchant", label: "Dashboard", icon: LayoutDashboard, hidden: true },
   { href: "/merchant/wallets", label: "My Wallets", icon: Wallet },
   { href: "/merchant/float-topups", label: "Float Topups", icon: CircleDollarSign },
   { href: "/merchant/transfers", label: "Transfers", icon: Repeat },
@@ -69,7 +72,9 @@ function SidebarNav({
 }) {
   const pathname = usePathname();
   const user = getUser();
-  const items = role === "admin" ? adminNav : merchantNav;
+  const items = (role === "admin" ? adminNav : merchantNav).filter(
+    (item) => !("hidden" in item && item.hidden),
+  );
 
   return (
     <>
