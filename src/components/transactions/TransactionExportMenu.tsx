@@ -13,12 +13,14 @@ export function TransactionExportMenu({
   title = "Transactions",
   filename = "transactions",
   showMerchant = false,
+  showProviderFee = false,
   disabled = false,
   loadRows,
 }: {
   title?: string;
   filename?: string;
   showMerchant?: boolean;
+  showProviderFee?: boolean;
   disabled?: boolean;
   loadRows: () => Promise<Transaction[]>;
 }) {
@@ -46,7 +48,13 @@ export function TransactionExportMenu({
         setError("No transactions to export for the current filters.");
         return;
       }
-      const payload = { title, filename, transactions: rows, showMerchant };
+      const payload = {
+        title,
+        filename,
+        transactions: rows,
+        showMerchant,
+        showProviderFee,
+      };
       if (kind === "excel") {
         exportTransactionsExcel(payload);
       } else {

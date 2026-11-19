@@ -116,8 +116,8 @@ export default function MerchantTransfersPage() {
         // Fall back to the wallets list if the dedicated endpoint is unavailable.
       }
 
-      const all = await apiFetch<
-        Array<{
+      const data = await apiFetch<{
+        wallets: Array<{
           walletId: number;
           name: string;
           walletType: string;
@@ -125,10 +125,10 @@ export default function MerchantTransfersPage() {
           currency: string;
           available: string;
           isActive?: boolean;
-        }>
-      >("/v1/portal/wallets");
+        }>;
+      }>("/v1/portal/wallets");
 
-      const leaves = all.filter(
+      const leaves = (data.wallets ?? []).filter(
         (wallet) =>
           wallet.isActive !== false &&
           (wallet.walletType === "COLLECTION_LEAF" ||

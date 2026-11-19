@@ -55,7 +55,7 @@ export function getUser(): AuthUser | null {
 }
 
 export function homeForRole(role: UserRole): string {
-  return role === "admin" ? "/admin" : "/merchant";
+  return role === "admin" ? "/admin" : "/merchant/wallets";
 }
 
 function decodeNextCandidate(raw: string): string {
