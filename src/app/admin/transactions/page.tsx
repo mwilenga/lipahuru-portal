@@ -165,7 +165,11 @@ export default function AdminTransactionsPage() {
         subtitle="All merchant collections and disbursements"
       >
         <div className="space-y-4">
-          <TransactionSummaryCards summary={summary} operation={operation} />
+          <TransactionSummaryCards
+            summary={summary}
+            operation={operation}
+            showProviderFees
+          />
 
           {loading ? (
             <PageLoader label="Loading transactions…" />
@@ -174,6 +178,7 @@ export default function AdminTransactionsPage() {
               <TransactionTable
                 transactions={transactions}
                 showMerchant
+                showProviderFee
                 title="Transactions"
                 exportFilename="admin-transactions"
                 toolbarActions={

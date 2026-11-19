@@ -60,7 +60,9 @@ export default function MerchantFloatTopupsPage() {
   }, []);
 
   useEffect(() => {
-    apiFetch<Wallet[]>("/v1/portal/wallets").then(setWallets);
+    apiFetch<{ wallets: Wallet[] }>("/v1/portal/wallets").then((data) =>
+      setWallets(data.wallets ?? []),
+    );
   }, []);
 
   useEffect(() => {

@@ -79,6 +79,7 @@ export interface Transaction {
   amount: string;
   fee?: string;
   net?: string;
+  providerFee?: string | null;
   currency: string;
   msisdn: string;
   providerTransactionId?: string;
@@ -116,6 +117,29 @@ export interface TransactionSummary {
   successAmount?: string;
   feeAmount?: string;
   netAmount?: string;
+  providerFeeAmount?: string;
+  netFeeAmount?: string;
+}
+
+export interface ProviderFeeRate {
+  id: number;
+  providerNetworkId: number;
+  providerCode?: string;
+  providerName?: string;
+  operation: string;
+  commissionType: string;
+  value: string;
+  isActive: boolean;
+  effectiveFrom?: string;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+export interface ProviderNetworkOption {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
 }
 
 export interface MerchantFundsRow {

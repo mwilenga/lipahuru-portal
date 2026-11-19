@@ -10,14 +10,33 @@ import { apiFetch } from "@/lib/api";
 import { formatMoney, providerColor } from "@/lib/format";
 import type { Wallet } from "@/types/api";
 
+type WalletsResponse = {
+  wallets: Wallet[];
+  actualBalance: string;
+  transactionFee: string;
+  totalPayout: string;
+  totalPayoutCharges: string;
+  currency: string;
+};
+
 export default function MerchantWalletsPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [actualBalance, setActualBalance] = useState<string>("0");
+  const [transactionFee, setTransactionFee] = useState<string>("0");
+  const [totalPayout, setTotalPayout] = useState<string>("0");
+  const [totalPayoutCharges, setTotalPayoutCharges] = useState<string>("0");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    apiFetch<Wallet[]>("/v1/portal/wallets")
-      .then(setWallets)
+    apiFetch<WalletsResponse>("/v1/portal/wallets")
+      .then((data) => {
+        setWallets(data.wallets ?? []);
+        setActualBalance(data.actualBalance ?? "0");
+        setTransactionFee(data.transactionFee ?? "0");
+        setTotalPayout(data.totalPayout ?? "0");
+        setTotalPayoutCharges(data.totalPayoutCharges ?? "0");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,6 +45,7 @@ export default function MerchantWalletsPage() {
   const leaves = wallets.filter((w) =>
     ["COLLECTION_LEAF", "DISBURSEMENT_LEAF"].includes(w.walletType),
   );
+  const currency = parent?.currency ?? "TZS";
 
   return (
     <AuthGuard role="merchant">
@@ -52,15 +72,43 @@ export default function MerchantWalletsPage() {
                     ACTIVE
                   </Badge>
                 </div>
-                <div className="mt-3 text-xs uppercase tracking-wide text-slate-500">
-                  Total balance
-                </div>
-                <div className="mt-1 text-4xl font-semibold text-white">
-                  {formatMoney(parent.total, parent.currency)}
-                </div>
-                <div className="mt-2 text-sm text-slate-400">
-                  Available {formatMoney(parent.available, parent.currency)} · Reserved{" "}
-                  {formatMoney(parent.reserved, parent.currency)}
+
+                <div className="mt-4 grid gap-6 lg:grid-cols-3">
+                  <div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500">
+                      Available balance
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-white sm:text-2xl">
+                      {formatMoney(parent.total, currency)}
+                    </div>
+                    <div className="mt-2 text-sm text-slate-400">
+                      Reserved {formatMoney(parent.reserved, currency)}
+                    </div>
+                  </div>
+
+                  <div className="lg:border-l lg:border-[var(--card-border)] lg:pl-6">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">
+                      Actual balance
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-teal-300 sm:text-2xl">
+                      {formatMoney(actualBalance, currency)}
+                    </div>
+                    <div className="mt-2 text-sm text-amber-200">
+                      Transaction fee {formatMoney(transactionFee, currency)}
+                    </div>
+                  </div>
+
+                  <div className="lg:border-l lg:border-[var(--card-border)] lg:pl-6">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">
+                      Total payout
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-rose-300/80 sm:text-2xl">
+                      {formatMoney(totalPayout, currency)}
+                    </div>
+                    <div className="mt-2 text-xs text-rose-300/60">
+                      Total payout charges {formatMoney(totalPayoutCharges, currency)}
+                    </div>
+                  </div>
                 </div>
               </Card>
             ) : null}

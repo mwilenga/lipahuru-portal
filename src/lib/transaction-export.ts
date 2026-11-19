@@ -9,9 +9,10 @@ export type TransactionExportOptions = {
   filename: string;
   transactions: Transaction[];
   showMerchant?: boolean;
+  showProviderFee?: boolean;
 };
 
-function headers(showMerchant: boolean): string[] {
+function headers(showMerchant: boolean, showProviderFee: boolean): string[] {
   return [
     ...(showMerchant ? ["Merchant"] : []),
     "Reference",
@@ -22,6 +23,7 @@ function headers(showMerchant: boolean): string[] {
     "MSISDN",
     "Amount",
     "Fee",
+    ...(showProviderFee ? ["Provider fee"] : []),
     "Net",
     "Currency",
     "Status",
@@ -29,7 +31,11 @@ function headers(showMerchant: boolean): string[] {
   ];
 }
 
-function row(tx: Transaction, showMerchant: boolean): (string | number)[] {
+function row(
+  tx: Transaction,
+  showMerchant: boolean,
+  showProviderFee: boolean,
+): (string | number)[] {
   return [
     ...(showMerchant ? [tx.merchantName ?? ""] : []),
     tx.reference,
@@ -40,6 +46,7 @@ function row(tx: Transaction, showMerchant: boolean): (string | number)[] {
     tx.msisdn,
     Number(tx.amount) || 0,
     Number(tx.fee ?? 0) || 0,
+    ...(showProviderFee ? [Number(tx.providerFee ?? 0) || 0] : []),
     Number(tx.net ?? tx.amount) || 0,
     tx.currency,
     tx.status,
@@ -58,13 +65,14 @@ export function exportTransactionsExcel({
   filename,
   transactions,
   showMerchant = false,
+  showProviderFee = false,
 }: TransactionExportOptions): void {
   const sheet = XLSX.utils.aoa_to_sheet([
     [title],
     [`Exported ${formatDateTime(new Date().toISOString())}`],
     [],
-    headers(showMerchant),
-    ...transactions.map((tx) => row(tx, showMerchant)),
+    headers(showMerchant, showProviderFee),
+    ...transactions.map((tx) => row(tx, showMerchant, showProviderFee)),
   ]);
 
   const workbook = XLSX.utils.book_new();
@@ -77,6 +85,7 @@ export function exportTransactionsPdf({
   filename,
   transactions,
   showMerchant = false,
+  showProviderFee = false,
 }: TransactionExportOptions): void {
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
@@ -89,9 +98,9 @@ export function exportTransactionsPdf({
 
   autoTable(doc, {
     startY: 64,
-    head: [headers(showMerchant)],
+    head: [headers(showMerchant, showProviderFee)],
     body: transactions.map((tx) =>
-      row(tx, showMerchant).map((cell) => String(cell)),
+      row(tx, showMerchant, showProviderFee).map((cell) => String(cell)),
     ),
     styles: { fontSize: 7, cellPadding: 3 },
     headStyles: { fillColor: [15, 23, 42], textColor: 230 },

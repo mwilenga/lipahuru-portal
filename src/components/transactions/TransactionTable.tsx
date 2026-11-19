@@ -10,6 +10,7 @@ import type { Transaction } from "@/types/api";
 export function TransactionTable({
   transactions,
   showMerchant = false,
+  showProviderFee = false,
   title = "Transactions",
   exportFilename = "transactions",
   loadExportRows,
@@ -18,6 +19,7 @@ export function TransactionTable({
 }: {
   transactions: Transaction[];
   showMerchant?: boolean;
+  showProviderFee?: boolean;
   title?: string;
   exportFilename?: string;
   loadExportRows?: () => Promise<Transaction[]>;
@@ -61,6 +63,9 @@ export function TransactionTable({
               <th className="px-4 py-3">MSISDN</th>
               <th className="px-4 py-3">Amount</th>
               <th className="px-4 py-3">Fee</th>
+              {showProviderFee ? (
+                <th className="px-4 py-3">Provider fee</th>
+              ) : null}
               <th className="px-4 py-3">Net</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Time</th>
@@ -99,6 +104,13 @@ export function TransactionTable({
                 <td className="px-4 py-3 text-amber-200/90">
                   {formatMoney(tx.fee ?? "0", tx.currency)}
                 </td>
+                {showProviderFee ? (
+                  <td className="px-4 py-3 text-orange-200/90">
+                    {tx.providerFee != null
+                      ? formatMoney(tx.providerFee, tx.currency)
+                      : "—"}
+                  </td>
+                ) : null}
                 <td className="px-4 py-3 font-medium text-emerald-300">
                   {formatMoney(tx.net ?? tx.amount, tx.currency)}
                 </td>
@@ -130,6 +142,7 @@ export function TransactionTable({
               title={title}
               filename={exportFilename}
               showMerchant={showMerchant}
+              showProviderFee={showProviderFee}
               disabled={transactions.length === 0}
               loadRows={loadExportRows}
             />

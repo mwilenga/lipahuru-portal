@@ -5,9 +5,11 @@ import type { TransactionSummary } from "@/types/api";
 export function TransactionSummaryCards({
   summary,
   operation,
+  showProviderFees = false,
 }: {
   summary: TransactionSummary | null;
   operation?: string;
+  showProviderFees?: boolean;
 }) {
   const money = (amount: string | undefined) =>
     summary ? formatMoney(amount ?? "0", summary.currency) : "—";
@@ -26,7 +28,13 @@ export function TransactionSummaryCards({
         : "Net amount";
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div
+      className={
+        showProviderFees
+          ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          : "grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      }
+    >
       <SummaryCard
         label={grossLabel}
         value={money(summary?.successAmount)}
@@ -35,13 +43,29 @@ export function TransactionSummaryCards({
       <SummaryCard
         label="Transaction charges"
         value={money(summary?.feeAmount)}
-        hint="On successful transactions"
+        hint="Merchant fees on successful transactions"
         valueClassName="text-amber-300"
       />
+      {showProviderFees ? (
+        <>
+          <SummaryCard
+            label="Provider fees"
+            value={money(summary?.providerFeeAmount)}
+            hint="Snapshotted provider charges"
+            valueClassName="text-orange-300"
+          />
+          <SummaryCard
+            label="Net fee"
+            value={money(summary?.netFeeAmount)}
+            hint="Merchant fees minus provider fees"
+            valueClassName="text-emerald-300"
+          />
+        </>
+      ) : null}
       <SummaryCard
         label={netLabel}
         value={money(summary?.netAmount)}
-        hint="Gross minus charges"
+        hint="Gross minus merchant charges"
         valueClassName="text-teal-300"
       />
       <SummaryCard
